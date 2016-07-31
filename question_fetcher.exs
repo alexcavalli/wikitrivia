@@ -1,24 +1,6 @@
 defmodule QuestionFetcher do
   defmodule Question do
     defstruct description: nil, title: nil
-
-    def new(%{"extract" => description, "title" => title}) do
-      %Question{description: clean_description(description), title: title}
-    end
-
-    def valid?(%Question{} = page) do
-      String.contains?(page.description, page.title)
-    end
-
-    def redact_title(%Question{} = page) do
-      %{page | description: String.replace(page.description, page.title, "___")}
-    end
-
-    defp clean_description(description) do
-      description
-      |> String.replace(~r/ \(.*?\)/, "")
-      |> String.replace(~r/\. [A-Z].*|\.$|\.\n.*/s, ".")
-    end
   end
 
   @language "en"
@@ -29,8 +11,7 @@ defmodule QuestionFetcher do
     fetch_total_questions([], num_questions)
   end
 
-  defp fetch_total_questions(questions, num_questions) when length(questions) == num_questions, do: questions
-  defp fetch_total_questions(questions, num_questions) when length(questions) > num_questions, do: Enum.take(questions, num_questions)
+  defp fetch_total_questions(questions, num_questions) when length(questions) >= num_questions, do: Enum.take(questions, num_questions)
   defp fetch_total_questions(questions, num_questions) do
     num_questions_needed = num_questions - length(questions)
     IO.puts "Fetching #{num_questions_needed} questions."
@@ -64,9 +45,27 @@ defmodule QuestionFetcher do
 
   defp clean_pages(pages) do
     pages
-    |> Enum.map(fn(page) -> Question.new(page) end)
-    |> Enum.filter(fn(question) -> Question.valid?(question) end)
-    |> Enum.map(fn(question) -> Question.redact_title(question) end)
+    |> Enum.map(&new_question/1)
+    |> Enum.filter(&valid_question?/1)
+    |> Enum.map(&redact_question_title/1)
+  end
+
+  defp new_question(%{"extract" => description, "title" => title}) do
+    %Question{description: clean_description(description), title: title}
+  end
+
+  defp valid_question?(%Question{} = question) do
+    String.contains?(question.description, question.title)
+  end
+
+  defp redact_question_title(%Question{} = question) do
+    %{question | description: String.replace(question.description, question.title, "___")}
+  end
+
+  defp clean_description(description) do
+    description
+    |> String.replace(~r/ \(.*?\)/, "")
+    |> String.replace(~r/\. [A-Z].*|\.$|\.\n.*/s, ".")
   end
 
   defp random_list_url(limit, nil), do: @random_list_base_url <> "&rnlimit=#{limit}"
