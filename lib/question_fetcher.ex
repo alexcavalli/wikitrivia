@@ -44,7 +44,6 @@ defmodule QuestionFetcher do
   end
 
   defp clean_pages(pages) do
-    IO.inspect pages
     pages
     |> Enum.map(&new_question/1)
     |> Enum.filter(&valid_question?/1)
