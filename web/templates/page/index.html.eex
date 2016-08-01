@@ -1,7 +1,1 @@
-Test content
-
-<ul>
-  <%= for question <- @questions do %>
-    <li><%= question.title %></li>
-  <% end %>
-</ul>
+<div id="question-panel"></div>
