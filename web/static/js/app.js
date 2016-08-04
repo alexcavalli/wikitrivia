@@ -44,10 +44,20 @@ class QuestionPanel extends React.Component {
       })
   }
 
+  selectAnswer (answer) {
+    console.log(answer)
+    this.setState({selectedAnswer: answer})
+  }
+
   render () {
     let answers = this.state.answers.map((answer) => {
       return (
-        <Answer key={answer}>{answer}</Answer>
+        <Answer
+          onClick={this.selectAnswer.bind(this, answer)}
+          key={answer}
+          isCorrect={answer === this.state.correct_answer}
+          isSelected={answer === this.state.selectedAnswer}
+        >{answer}</Answer>
       )
     })
     return (
@@ -62,9 +72,24 @@ class QuestionPanel extends React.Component {
 }
 
 class Answer extends React.Component {
+  getColor () {
+    if (this.props.isSelected) {
+      if (this.props.isCorrect) {
+        return 'green'
+      } else {
+        return 'red'
+      }
+    }
+  }
+
   render () {
+    let liStyle = {
+      cursor: 'pointer',
+      color: this.getColor()
+    }
+
     return (
-      <li>{this.props.children}</li>
+      <li style={liStyle} onClick={this.props.onClick}>{this.props.children}</li>
     )
   }
 }

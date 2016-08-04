@@ -8,6 +8,6 @@ defmodule Wikitrivia.PageController do
   def question(conn, _params) do
     question = QuestionGenerator.generate_question
 
-    render conn, "question.json", data: question
+    render conn, "question.json", question: question
   end
 end
