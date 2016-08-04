@@ -29,50 +29,34 @@ class QuestionPanel extends React.Component {
     super(props)
 
     this.state = {
-      data: []
+      answers: []
     }
   }
 
   componentDidMount () {
-    fetch(this.props.url)
+      fetch(this.props.url)
       .then((response) => {
         return response.json()
       }).then((json) => {
-        this.setState({data: json})
+        this.setState(json)
       }).catch((exception) => {
         console.log(this.props.url, exception)
       })
   }
 
   render () {
-    return (
-      <div className='question-panel'>
-        <QuestionPrompt prompt='Sample question prompt' />
-        <AnswersList data={this.state.data} />
-      </div>
-    )
-  }
-}
-
-class QuestionPrompt extends React.Component {
-  render () {
-    return (
-      <h4>{this.props.prompt}</h4>
-    )
-  }
-}
-
-class AnswersList extends React.Component {
-  render () {
-    let answers = this.props.data.map((question) => {
+    let answers = this.state.answers.map((answer) => {
       return (
-        <Answer key={question.title}>{question.title}</Answer>
+        <Answer key={answer}>{answer}</Answer>
       )
     })
     return (
-      <ul>
-        {answers}
-      </ul>
+      <div className='question-panel'>
+        <h4>{this.state.prompt}</h4>
+        <ol>
+          {answers}
+        </ol>
+      </div>
     )
   }
 }
