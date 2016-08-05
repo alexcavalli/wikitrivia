@@ -38,15 +38,45 @@ class QuestionPanel extends React.Component {
       .then((response) => {
         return response.json()
       }).then((json) => {
-        this.setState(json)
+        this.startQuestion(json)
       }).catch((exception) => {
         console.log(this.props.url, exception)
       })
   }
 
+  startQuestion (questionJson) {
+    questionJson.startTime = Date.now()
+    questionJson.timeLeftInMilliseconds = 10000
+    this.timer = setInterval(this.updateTimer.bind(this), 100)
+    this.setState(questionJson)
+  }
+
+  updateTimer () {
+    let stateUpdate = {timeLeftInMilliseconds: this.calculateTimeLeft()}
+    if (stateUpdate.timeLeftInMilliseconds < 0) {
+      stateUpdate.timeLeftInMilliseconds = 0.0
+      stateUpdate.points = 0
+      clearInterval(this.timer)
+    }
+    this.setState(stateUpdate)
+  }
+
+  // in milliseconds
+  calculateTimeLeft () {
+    return (10000 - (Date.now() - this.state.startTime))
+  }
+
   selectAnswer (answer) {
-    console.log(answer)
-    this.setState({selectedAnswer: answer})
+    clearInterval(this.timer)
+    let points = this.pointsForAnswer(answer)
+    this.setState({selectedAnswer: answer, points: points})
+  }
+
+  pointsForAnswer (answer) {
+    if (answer !== this.state.correct_answer) { return 0 }
+    let timeLeftInMilliseconds = this.calculateTimeLeft()
+    let points = timeLeftInMilliseconds <= 0 ? 0 : Math.trunc(timeLeftInMilliseconds)
+    return (points)
   }
 
   render () {
@@ -63,6 +93,8 @@ class QuestionPanel extends React.Component {
     return (
       <div className='question-panel'>
         <h4>{this.state.prompt}</h4>
+        <h4>Time left: {(this.state.timeLeftInMilliseconds / 1000).toFixed(1)}</h4>
+        <h4>Points: {this.state.points}</h4>
         <ol>
           {answers}
         </ol>
