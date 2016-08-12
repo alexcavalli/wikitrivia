@@ -91,13 +91,19 @@ class QuestionPanel extends React.Component {
       )
     })
     return (
-      <div className='question-panel'>
-        <h4>{this.state.prompt}</h4>
-        <h4>Time left: {(this.state.timeLeftInMilliseconds / 1000).toFixed(1)}</h4>
-        <h4>Points: {this.state.points}</h4>
-        <ol>
-          {answers}
-        </ol>
+      <div className='question'>
+        <div className='question__header'>
+          <span className='question__prompt'>{this.state.prompt}</span>
+          <span className='question__timer'>{(this.state.timeLeftInMilliseconds / 1000).toFixed(1)}</span>
+        </div>
+        <div className='question__answer-list'>
+          <ol>
+            {answers}
+          </ol>
+        </div>
+        <div className='question__points'>
+          {this.state.points === undefined ? "" : `You earned ${this.state.points} points!`}
+        </div>
       </div>
     )
   }
@@ -121,7 +127,7 @@ class Answer extends React.Component {
     }
 
     return (
-      <li style={liStyle} onClick={this.props.onClick}>{this.props.children}</li>
+      <li className="question__answer" style={liStyle} onClick={this.props.onClick}>{this.props.children}</li>
     )
   }
 }

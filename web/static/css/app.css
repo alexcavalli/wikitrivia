@@ -1,0 +1,45 @@
+html {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+.question {
+  background-color: #ddd;
+}
+
+.question__header {
+  display: flex;
+  box-shadow: 0 2px 5px 1px #888;
+}
+
+.question__timer {
+  background-color: #111;
+  color: #eee;
+  text-align: center;
+  padding: 2%;
+}
+
+.question__prompt {
+  background-color: #444;
+  color: #bbb;
+  text-align: center;
+  padding: 2%;
+}
+
+.question__points {
+  background-color: #111;
+  color: #eee;
+  text-align: center;
+  padding: 2%;
+}
+
+.question__answer {
+  background-color: #aaa;
+  color: #222;
+  margin: 1%;
+  padding: 1%;
+  list-style-position: inside;
+}
