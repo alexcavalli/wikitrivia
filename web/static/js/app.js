@@ -67,6 +67,9 @@ class QuestionPanel extends React.Component {
   }
 
   selectAnswer (answer) {
+    if (this.state.selectedAnswer) {
+      return false
+    }
     clearInterval(this.timer)
     let points = this.pointsForAnswer(answer)
     this.setState({selectedAnswer: answer, points: points})
@@ -87,23 +90,29 @@ class QuestionPanel extends React.Component {
           key={answer}
           isCorrect={answer === this.state.correct_answer}
           isSelected={answer === this.state.selectedAnswer}
-        >{answer}</Answer>
+        >
+          {answer}
+        </Answer>
       )
     })
+
     return (
       <div className='question'>
         <div className='question__header'>
           <span className='question__prompt'>{this.state.prompt}</span>
-          <span className='question__timer'>{(this.state.timeLeftInMilliseconds / 1000).toFixed(1)}</span>
+          <div className='question__timer'>
+            <span>{(this.state.timeLeftInMilliseconds / 1000).toFixed(1)}</span>
+          </div>
         </div>
         <div className='question__answer-list'>
           <ol>
             {answers}
           </ol>
         </div>
-        <div className='question__points'>
-          {this.state.points === undefined ? "" : `You earned ${this.state.points} points!`}
-        </div>
+        <Points isOutOfTime={this.state.timeLeftInMilliseconds === 0.0}
+        >
+          {this.state.points}
+        </Points>
       </div>
     )
   }
@@ -127,7 +136,35 @@ class Answer extends React.Component {
     }
 
     return (
-      <li className="question__answer" style={liStyle} onClick={this.props.onClick}>{this.props.children}</li>
+      <li className='question__answer' style={liStyle} onClick={this.props.onClick}>{this.props.children}</li>
+    )
+  }
+}
+
+class Points extends React.Component {
+  message () {
+    if (this.props.children === 0.0) {
+      if (this.props.isOutOfTime) {
+        return 'Time\'s up!'
+      } else { // incorrect answer
+        return 'Incorrect!'
+      }
+    } else {
+      return `Correct! You earned ${this.props.children} points!`
+    }
+  }
+
+  render () {
+    if (this.props.children === undefined) {
+      return null
+    }
+
+    return (
+      <div className='question__footer'>
+        <div className='question__points'>
+          {this.message()}
+        </div>
+      </div>
     )
   }
 }

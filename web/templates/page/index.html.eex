@@ -1,1 +1,3 @@
-<div id="question-panel"></div>
+<div class='container'>
+  <div id="question-panel"></div>
+</div>
