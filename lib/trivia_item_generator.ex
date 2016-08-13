@@ -1,4 +1,4 @@
-defmodule TriviaFetcher do
+defmodule TriviaItemGenerator do
   defmodule TriviaItem do
     defstruct description: nil, title: nil
   end
@@ -81,7 +81,7 @@ defmodule TriviaFetcher do
   end
 
   defp redact_trivia_item_title(%TriviaItem{} = trivia_item) do
-    %{trivia_item | description: String.replace(trivia_item.description, trivia_item.title, "___")}
+    %{trivia_item | redacted_description: String.replace(trivia_item.description, trivia_item.title, "___")}
   end
 
   defp clean_description(description) do
