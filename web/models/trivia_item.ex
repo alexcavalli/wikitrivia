@@ -5,6 +5,8 @@ defmodule Wikitrivia.TriviaItem do
     field :title, :string
     field :description, :string
     field :redacted_description, :string
+    has_many :questions_as_answer, Wikitrivia.Question, foreign_key: "answer_id"
+    many_to_many :questions_as_choice, Wikitrivia.Question, join_through: "questions_trivia_items"
 
     timestamps
   end

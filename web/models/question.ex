@@ -2,7 +2,8 @@ defmodule Wikitrivia.Question do
   use Wikitrivia.Web, :model
 
   schema "questions" do
-    belongs_to :answer, Wikitrivia.Answer
+    belongs_to :answer, Wikitrivia.TriviaItem
+    many_to_many :answer_choices, Wikitrivia.TriviaItem, join_through: "questions_trivia_items"
 
     timestamps
   end
