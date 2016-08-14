@@ -26,8 +26,10 @@ defmodule Wikitrivia.ModelCase do
   end
 
   setup tags do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Wikitrivia.Repo)
+
     unless tags[:async] do
-      Ecto.Adapters.SQL.restart_test_transaction(Wikitrivia.Repo, [])
+      Ecto.Adapters.SQL.Sandbox.mode(Wikitrivia.Repo, {:shared, self()})
     end
 
     :ok

@@ -14,6 +14,9 @@ config :wikitrivia, Wikitrivia.Endpoint,
   pubsub: [name: Wikitrivia.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
+config :wikitrivia,
+  ecto_repos: [Wikitrivia.Repo]
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
