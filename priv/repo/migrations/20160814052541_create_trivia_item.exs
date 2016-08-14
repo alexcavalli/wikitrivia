@@ -3,9 +3,9 @@ defmodule Wikitrivia.Repo.Migrations.CreateTriviaItem do
 
   def change do
     create table(:trivia_items) do
-      add :title, :string
-      add :description, :string
-      add :redacted_description, :string
+      add :title, :text
+      add :description, :text
+      add :redacted_description, :text
 
       timestamps
     end

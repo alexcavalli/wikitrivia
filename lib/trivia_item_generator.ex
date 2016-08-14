@@ -1,17 +1,15 @@
 defmodule TriviaItemGenerator do
-  defmodule TriviaItem do
-    defstruct description: nil, title: nil
-  end
-
   @language "en"
   @random_list_base_url "https://#{@language}.wikipedia.org/w/api.php?action=query&format=json&list=random&indexpageids=1&titles=&rnnamespace=0&rnfilterredir=nonredirects"
   @page_data_base_url "https://#{@language}.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&meta=&exintro=1&explaintext=1"
 
   def generate_trivia_items(num_trivia_items) do
-    generate_total_trivia_items([], num_trivia_items)
+    generate_total_trivia_items([], num_trivia_items, nil)
   end
 
-  defp generate_total_trivia_items(trivia_items, num_trivia_items), do: generate_total_trivia_items(trivia_items, num_trivia_items, nil)
+  # TODO: Clean this up a bit. Change num_trivia_items param to what num_trivia_items_needed currently is.
+  # Then set a guard clause on num trivia_items_needed being 0 for returning
+  # Have each method call generate a bunch of trivia items and return the generated items ++ a recursive call.
   defp generate_total_trivia_items(trivia_items, num_trivia_items, _) when length(trivia_items) >= num_trivia_items, do: Enum.take(trivia_items, num_trivia_items)
   defp generate_total_trivia_items(trivia_items, num_trivia_items, rncontinue) do
     num_trivia_items_needed = num_trivia_items - length(trivia_items)
@@ -20,6 +18,10 @@ defmodule TriviaItemGenerator do
     generate_total_trivia_items(trivia_items ++ new_trivia_items, num_trivia_items, rncontinue)
   end
 
+  # This method is a bit of a lie, since it returns *up to* num_trivia_items.
+  # Might want to rename to make that clearer or refactor to keep fetching until
+  # it gets the desired amount (the latter probably won't play nice with the
+  # "at most 20" thing going on in generate_total_trivia_items)
   defp fetch_trivia_items(num_trivia_items, rncontinue) do
     {page_ids, rncontinue} = fetch_random_page_ids(num_trivia_items, rncontinue)
 
@@ -73,15 +75,15 @@ defmodule TriviaItemGenerator do
   end
 
   defp new_trivia_item(%{"extract" => description, "title" => title}) do
-    %TriviaItem{description: clean_description(description), title: title}
+    %{description: clean_description(description), title: title}
   end
 
-  defp valid_trivia_item?(%TriviaItem{} = trivia_item) do
+  defp valid_trivia_item?(%{} = trivia_item) do
     String.contains?(trivia_item.description, trivia_item.title)
   end
 
-  defp redact_trivia_item_title(%TriviaItem{} = trivia_item) do
-    %{trivia_item | redacted_description: String.replace(trivia_item.description, trivia_item.title, "___")}
+  defp redact_trivia_item_title(%{} = trivia_item) do
+    Map.put(trivia_item, :redacted_description, String.replace(trivia_item.description, trivia_item.title, "___"))
   end
 
   defp clean_description(description) do
