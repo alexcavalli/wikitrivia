@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Wikitrivia.GenerateQuestions do
   use Mix.Task
 
-  import Ecto.Query, only: [from: 2, first: 1, last: 1]
+  import Ecto.Query, only: [from: 2, last: 1]
 
   alias Wikitrivia.Repo
   alias Wikitrivia.TriviaItem
@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Wikitrivia.GenerateQuestions do
     generate_random_integers(10, max_trivia_item_id)
     |> Enum.reject(fn(id) -> answer_id == id end)
     |> Enum.uniq
-    |> Enum.map(fn(id) -> Repo.get(TriviaItem, id) end)
+    |> Enum.map(fn(id) -> Repo.get!(TriviaItem, id) end)
     |> Enum.take(4)
   end
 
