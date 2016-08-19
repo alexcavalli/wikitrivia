@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Wikitrivia.FetchTriviaItems do
   def run(_args) do
     Mix.Task.run "app.start"
 
-    TriviaItemGenerator.generate_trivia_items(10)
+    TriviaItemGenerator.generate_trivia_items(100)
     |> load_trivia_items
   end
 

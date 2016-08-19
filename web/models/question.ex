@@ -8,6 +8,7 @@ defmodule Wikitrivia.Question do
     timestamps
   end
 
+  @permitted_fields ~w(answer answer_choices)
   @required_fields ~w()
   @optional_fields ~w()
 
@@ -17,8 +18,10 @@ defmodule Wikitrivia.Question do
   If no params are provided, an invalid changeset is returned
   with no validation performed.
   """
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     model
-    |> cast(params, @required_fields, @optional_fields)
+    |> cast(params, [])
+    |> put_assoc(:answer, params[:answer], required: true)
+    |> put_assoc(:answer_choices, params[:answer_choices], required: true)
   end
 end
