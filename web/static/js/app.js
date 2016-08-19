@@ -29,7 +29,7 @@ class QuestionPanel extends React.Component {
     super(props)
 
     this.state = {
-      answers: []
+      answer_choices: []
     }
   }
 
@@ -66,32 +66,32 @@ class QuestionPanel extends React.Component {
     return (10000 - (Date.now() - this.state.startTime))
   }
 
-  selectAnswer (answer) {
-    if (this.state.selectedAnswer) {
+  selectAnswer (answerId) {
+    if (this.state.selectedAnswerId) {
       return false
     }
     clearInterval(this.timer)
-    let points = this.pointsForAnswer(answer)
-    this.setState({selectedAnswer: answer, points: points})
+    let points = this.pointsForAnswer(answerId)
+    this.setState({selectedAnswerId: answerId, points: points})
   }
 
-  pointsForAnswer (answer) {
-    if (answer !== this.state.correct_answer) { return 0 }
+  pointsForAnswer (answerId) {
+    if (answerId !== this.state.correct_answer_id) { return 0 }
     let timeLeftInMilliseconds = this.calculateTimeLeft()
-    let points = timeLeftInMilliseconds <= 0 ? 0 : Math.trunc(timeLeftInMilliseconds)
+    let points = timeLeftInMilliseconds <= 0 ? 0 : Math.trunc(timeLeftInMilliseconds / 10)
     return (points)
   }
 
   render () {
-    let answers = this.state.answers.map((answer) => {
+    let answers = this.state.answer_choices.map((answerChoice) => {
       return (
         <Answer
-          onClick={this.selectAnswer.bind(this, answer)}
-          key={answer}
-          isCorrect={answer === this.state.correct_answer}
-          isSelected={answer === this.state.selectedAnswer}
+          onClick={this.selectAnswer.bind(this, answerChoice.id)}
+          key={answerChoice.id}
+          isCorrect={answerChoice.id === this.state.correct_answer_id}
+          isSelected={answerChoice.id === this.state.selectedAnswerId}
         >
-          {answer}
+          {answerChoice.answer}
         </Answer>
       )
     })
