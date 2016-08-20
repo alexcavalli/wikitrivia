@@ -16,7 +16,7 @@ After a full quiz, the points are tallied, and that is the score.
 
 A player has 10 seconds to answer a question. Points are a max of 1000 (if the
 player were able to answer correctly without any time elapsing), and decrease
-by 1 for every millisecond.
+by 1 for every hundredth of a second.
 
 ## Competitive UI
 
