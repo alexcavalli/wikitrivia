@@ -10,6 +10,11 @@ defmodule Wikitrivia.PageController do
   def question(conn, _params) do
     question = random_question
 
+    # TODO: Answer lists need to randomized. I think this is best handled
+    # server-side (so that the order is the same for all players) but probably
+    # should be different every time the question is fetched (so not DB). Could
+    # go either way on the DB point though - maybe in fairness it should always
+    # be presented in the same order.
     render conn, "question.json", data: question
   end
 
