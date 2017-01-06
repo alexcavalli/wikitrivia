@@ -19,7 +19,7 @@ defmodule Wikitrivia.Mixfile do
   def application do
     [mod: {Wikitrivia, []},
      applications: [:phoenix, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :postgrex, :httpoison]]
+                    :phoenix_ecto, :postgrex, :httpoison, :comeonin]]
   end
 
   # Specifies which paths to compile per environment.
@@ -37,7 +37,8 @@ defmodule Wikitrivia.Mixfile do
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext, "~> 0.9"},
      {:cowboy, "~> 1.0"},
-     {:httpoison, "~> 0.8.0"}]
+     {:httpoison, "~> 0.8.0"},
+     {:comeonin, "~> 3.0"}]
   end
 
   # Aliases are shortcut or tasks specific to the current project.
