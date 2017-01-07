@@ -18,6 +18,9 @@ defmodule Wikitrivia.Router do
 
     get "/", PageController, :index
     get "/question", PageController, :question
+
+    resources "/users", UserController, only: [:create]
+    resources "/sessions", SessionController, only: [:create]
   end
 
   # Other scopes may use custom stacks.

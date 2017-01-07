@@ -38,7 +38,8 @@ defmodule Wikitrivia.Mixfile do
      {:gettext, "~> 0.9"},
      {:cowboy, "~> 1.0"},
      {:httpoison, "~> 0.8.0"},
-     {:comeonin, "~> 3.0"}]
+     {:comeonin, "~> 3.0"},
+     {:secure_random, "~> 0.5"}]
   end
 
   # Aliases are shortcut or tasks specific to the current project.
