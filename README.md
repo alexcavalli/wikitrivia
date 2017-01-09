@@ -52,6 +52,12 @@ totals adjusted for questions that were rejected for being obvious.
 The system could also tier questions based on average success rates, and provide
 user stats on different levels of questions.
 
+## References and sources
+
+User authentication flow adapted from Micah Woods' article and associated project:
+https://blog.codeship.com/ridiculously-fast-api-authentication-with-phoenix/
+https://github.com/mwoods79/todo_api
+
 ## Original README info for reference
 
 To start your Phoenix app:
