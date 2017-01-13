@@ -1,6 +1,7 @@
-defmodule Wikitrivia.Plugs.AuthenticateUser do
+defmodule Wikitrivia.AuthenticateUser do
   import Plug.Conn
   import Ecto.Query, only: [from: 2]
+  import Phoenix.Controller, only: [render: 3]
 
   alias Wikitrivia.{Repo, Session}
 
@@ -34,6 +35,9 @@ defmodule Wikitrivia.Plugs.AuthenticateUser do
   end
 
   defp auth_error(conn) do
-    conn |> put_status(:unauthorized) |> halt
+    conn
+    |> put_status(:unauthorized)
+    |> render(Wikitrivia.ErrorView, "auth_error.json")
+    |> halt
   end
 end

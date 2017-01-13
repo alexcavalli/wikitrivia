@@ -36,7 +36,11 @@ class QuestionPanel extends React.Component {
   componentDidMount () {
       fetch(this.props.url)
       .then((response) => {
-        return response.json()
+        if (response.ok) {
+          return response.json()
+        } else {
+          console.log(response.json())
+        }
       }).then((json) => {
         this.startQuestion(json)
       }).catch((exception) => {

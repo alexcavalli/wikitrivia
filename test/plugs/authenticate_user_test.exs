@@ -1,7 +1,7 @@
-defmodule Wikitrivia.Plugs.AuthenticateUserTest do
+defmodule Wikitrivia.AuthenticateUserTest do
   use Wikitrivia.ConnCase
 
-  alias Wikitrivia.{Plugs.AuthenticateUser, Repo, User, Session}
+  alias Wikitrivia.{AuthenticateUser, Repo, User, Session}
 
   test "with valid token user is assigned to conn" do
     user = Repo.insert!(%User{email: "example@example.com", password_hash: "a1b2c3"})
@@ -16,19 +16,21 @@ defmodule Wikitrivia.Plugs.AuthenticateUserTest do
   end
 
   test "with invalid token response is 401" do
-    conn
+    conn = conn
+    |> Map.put(:params, %{})
     |> put_req_header("authorization", "Token token=\"garbage\"")
     |> AuthenticateUser.call(%{})
 
-    assert conn.status != 401
+    assert conn.status == 401
     refute conn.assigns[:current_user]
   end
 
   test "with missing token response is 401" do
-    conn
+    conn = conn
+    |> Map.put(:params, %{})
     |> AuthenticateUser.call(%{})
 
-    assert conn.status != 401
+    assert conn.status == 401
     refute conn.assigns[:current_user]
   end
 end

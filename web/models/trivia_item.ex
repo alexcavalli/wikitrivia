@@ -23,6 +23,6 @@ defmodule Wikitrivia.TriviaItem do
   def changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields)
-    |> validate_required(@required_fields)
+    |> validate_required([:title, :description, :redacted_description])
   end
 end

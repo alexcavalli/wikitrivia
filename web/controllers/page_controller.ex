@@ -1,6 +1,8 @@
 defmodule Wikitrivia.PageController do
   use Wikitrivia.Web, :controller
 
+  plug Wikitrivia.AuthenticateUser when action in [:question]
+
   alias Wikitrivia.Question
 
   def index(conn, _params) do
