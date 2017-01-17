@@ -11,10 +11,8 @@
 //
 // If you no longer want to use a dependency, remember
 // to also remove its path from "config.paths.watched".
-import 'phoenix_html'
+// import 'phoenix_html'
 import React from 'react'
-import ReactDOM from 'react-dom'
-import {Router, IndexRoute, Route, browserHistory} from 'react-router'
 
 // Import local files
 //
@@ -23,22 +21,13 @@ import {Router, IndexRoute, Route, browserHistory} from 'react-router'
 
 // import socket from "./socket"
 
-import MenuPanel from './menu_panel'
-import Quiz from './quiz'
-
-class App extends React.Component {
+export default class NicknameSetter extends React.Component {
   render () {
-    return (this.props.children)
+    return (
+      <div className='nickname'>
+        <input type='text' id='nickname' val='{this.props.nickname}' ref={(input) => { this.nicknameInput = input }} />
+        <button className='nickname__save-nickname' onClick={() => { this.props.onUpdate(this.nicknameInput.value) }}>Set Nickname</button>
+      </div>
+    )
   }
 }
-
-ReactDOM.render(
-  <Router history={browserHistory}>
-    <Route path='/' component={App}>
-      <IndexRoute component={MenuPanel} />
-      <Route path='quizzes' component={Quiz} />
-    </Route>
-  </Router>,
-  document.getElementById('root')
-)
-

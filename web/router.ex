@@ -13,18 +13,17 @@ defmodule Wikitrivia.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", Wikitrivia do
-    pipe_through :browser # Use the default browser stack
+  scope "/api", Wikitrivia do
+    pipe_through :api
 
-    get "/", PageController, :index
-    get "/question", PageController, :question
-
+    get "/question", QuestionController, :question
     resources "/users", UserController, only: [:create]
     resources "/sessions", SessionController, only: [:create]
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", Wikitrivia do
-  #   pipe_through :api
-  # end
+  scope "/", Wikitrivia do
+    pipe_through :browser # Use the default browser stack
+
+    get "/*path", PageController, :index
+  end
 end

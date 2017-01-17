@@ -11,10 +11,9 @@
 //
 // If you no longer want to use a dependency, remember
 // to also remove its path from "config.paths.watched".
-import 'phoenix_html'
+// import 'phoenix_html'
 import React from 'react'
-import ReactDOM from 'react-dom'
-import {Router, IndexRoute, Route, browserHistory} from 'react-router'
+import {Link} from 'react-router'
 
 // Import local files
 //
@@ -22,23 +21,19 @@ import {Router, IndexRoute, Route, browserHistory} from 'react-router'
 // paths "./socket" or full ones "web/static/js/socket".
 
 // import socket from "./socket"
+export default class MenuPanel extends React.Component {
+  constructor (props) {
+    super(props)
 
-import MenuPanel from './menu_panel'
-import Quiz from './quiz'
+    this.state = {}
+  }
 
-class App extends React.Component {
   render () {
-    return (this.props.children)
+    return (
+      <div className='menu'>
+        <button className='menu__start-quiz'><Link to='/quizzes'>Start Solo Quiz</Link></button>
+        <button className='menu__start-quiz' disabled='disabled'>Start Competitive Quiz</button>
+      </div>
+    )
   }
 }
-
-ReactDOM.render(
-  <Router history={browserHistory}>
-    <Route path='/' component={App}>
-      <IndexRoute component={MenuPanel} />
-      <Route path='quizzes' component={Quiz} />
-    </Route>
-  </Router>,
-  document.getElementById('root')
-)
-
