@@ -22,10 +22,11 @@ import 'phoenix_html'
 
 import React from 'react'
 import ReactDOM from 'react-dom'
-import * as fetch from 'whatwg-fetch'
+import 'whatwg-fetch'
 
-class QuestionPanel extends React.Component {
+export default class QuestionPanel extends React.Component {
   constructor (props) {
+    console.log(props);
     super(props)
 
     this.state = {
@@ -34,6 +35,7 @@ class QuestionPanel extends React.Component {
   }
 
   componentDidMount () {
+
     fetch(this.props.url)
       .then((response) => {
         if (response.ok) {
@@ -172,14 +174,3 @@ class Points extends React.Component {
     )
   }
 }
-
-ReactDOM.render(
-  <QuestionPanel url='/question' />,
-  document.getElementById('question-panel')
-)
-
-// - QuestionPanel
-//   - QuestionPrompt
-//   - AnswersList
-//     - Answer
-//   - Feedback
