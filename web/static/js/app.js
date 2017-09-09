@@ -12,6 +12,9 @@
 // If you no longer want to use a dependency, remember
 // to also remove its path from "config.paths.watched".
 import 'phoenix_html'
+import React from 'react'
+import ReactDOM from 'react-dom'
+import 'whatwg-fetch'
 
 // Import local files
 //
@@ -19,10 +22,6 @@ import 'phoenix_html'
 // paths "./socket" or full ones "web/static/js/socket".
 
 // import socket from "./socket"
-
-import React from 'react'
-import ReactDOM from 'react-dom'
-import 'whatwg-fetch'
 
 class QuestionPanel extends React.Component {
   constructor (props) {
@@ -34,18 +33,18 @@ class QuestionPanel extends React.Component {
   }
 
   componentDidMount () {
-      fetch(this.props.url)
-      .then((response) => {
-        if (response.ok) {
-          return response.json()
-        } else {
-          console.log(response.json())
-        }
-      }).then((json) => {
-        this.startQuestion(json)
-      }).catch((exception) => {
-        console.log(this.props.url, exception)
-      })
+    fetch(this.props.url)
+    .then((response) => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        console.log(response.json())
+      }
+    }).then((json) => {
+      this.startQuestion(json)
+    }).catch((exception) => {
+      console.log(this.props.url, exception)
+    })
   }
 
   startQuestion (questionJson) {
@@ -173,13 +172,10 @@ class Points extends React.Component {
   }
 }
 
-ReactDOM.render(
-  <QuestionPanel url='/question' />,
-  document.getElementById('question-panel')
-)
-
-// - QuestionPanel
-//   - QuestionPrompt
-//   - AnswersList
-//     - Answer
-//   - Feedback
+// Temporary solution to still be able to see question
+window.initQuestion = function() {
+  ReactDOM.render(
+    <QuestionPanel url='/api/question' />,
+    document.getElementById('question-panel')
+  )
+}

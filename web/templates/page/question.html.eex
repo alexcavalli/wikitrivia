@@ -1,0 +1,7 @@
+<div class='container'>
+  <div id="question-panel"></div>
+</div>
+
+<script>
+  window.initQuestion()
+</script>

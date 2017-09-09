@@ -12,7 +12,8 @@
   </head>
 
   <body>
-    <%= render @view_module, @view_template, assigns %>
+    <!-- TODO: refactor so that js isn't loaded before html -->
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+    <%= render @view_module, @view_template, assigns %>
   </body>
 </html>
