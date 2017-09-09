@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Wikitrivia.GenerateQuestions do
   defp trivia_items_without_questions do
     used_trivia_items = from q in Question,
       where: not is_nil(q.answer_id),
-      select: [:id, :answer_id]
+      select: {q.id, q.answer_id}
 
     unused_trivia_items = from t in TriviaItem,
       left_join: q in subquery(used_trivia_items), on: q.answer_id == t.id,

@@ -25,7 +25,6 @@ import {Router, IndexRoute, Route, browserHistory} from 'react-router'
 
 import MenuPanel from './menu_panel'
 import Quiz from './quiz'
-import QuestionPanel from './question_panel'
 
 class App extends React.Component {
   render () {
@@ -36,9 +35,7 @@ class App extends React.Component {
 ReactDOM.render(
   <Router history={browserHistory}>
     <Route path='/' component={App}>
-      // <IndexRoute component={MenuPanel} />
-      // Hack to get the questions to display while router is finished
-      <IndexRoute component={(props) => { return <QuestionPanel {...props} url='/api/question' /> } } />
+      <IndexRoute component={MenuPanel} />
       <Route path='quizzes' component={Quiz} />
     </Route>
   </Router>,
