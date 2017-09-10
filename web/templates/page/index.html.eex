@@ -1,1 +1,2 @@
 <p>The Main Page</p>
+<a href="<%= quiz_path(@conn, :new) %>">New Quiz</a>

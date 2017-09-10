@@ -12,6 +12,7 @@ defmodule Wikitrivia do
       # Start the Ecto repository
       supervisor(Wikitrivia.Repo, []),
       # Here you could define other workers and supervisors as children
+      worker(Wikitrivia.GameRegistry, [[]])
       # worker(Wikitrivia.Worker, [arg1, arg2, arg3]),
     ]
 
