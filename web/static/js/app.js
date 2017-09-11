@@ -21,7 +21,7 @@ import 'whatwg-fetch'
 // Local files can be imported directly using relative
 // paths "./socket" or full ones "web/static/js/socket".
 
-// import socket from "./socket"
+import {Socket} from "phoenix"
 
 class QuestionPanel extends React.Component {
   constructor (props) {
@@ -178,4 +178,12 @@ window.initQuestion = function() {
     <QuestionPanel url='/api/question' />,
     document.getElementById('question-panel')
   )
+}
+
+window.connectToSocket = function() {
+  const socket = new Socket("/socket", {
+    logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data); }
+  });
+  socket.connect();
+  return socket;
 }

@@ -24,7 +24,7 @@ defmodule Wikitrivia.Router do
   scope "/", Wikitrivia do
     pipe_through :browser # Use the default browser stack
 
-    resources "/quizzes", QuizController, only: [:new, :create]
+    resources "/quizzes", QuizController, only: [:show, :new, :create]
     get "/question", PageController, :question # temporary, just to have question somewhere
     get "/*path", PageController, :index
   end

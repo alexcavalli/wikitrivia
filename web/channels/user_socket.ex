@@ -2,7 +2,7 @@ defmodule Wikitrivia.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "rooms:*", Wikitrivia.RoomChannel
+  channel "games:*", Wikitrivia.GameChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

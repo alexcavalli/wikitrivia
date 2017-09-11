@@ -33,7 +33,7 @@ defmodule Wikitrivia.GameRegistry do
   end
 
   def handle_call({:lookup, game_id}, _from, games) do
-    {:reply, {:ok, Map.fetch(games, game_id)}, games}
+    {:reply, Map.fetch(games, game_id), games}
   end
 
   def handle_call({:create, game_id, num_players, question_ids}, _from, games) do

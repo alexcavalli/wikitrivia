@@ -1,0 +1,17 @@
+<p>A quiz</p>
+<div class="form-group">
+  <label for="player_name">Pick A Name</label>
+  <input id="player_name" type="text" name="player_name" class="form-control" />
+  <button id="join" class="btn btn-primary">Join Quiz</button>
+</div>
+
+<script>
+  document.getElementById("join").onclick = function() {
+    const socket = window.connectToSocket();
+    const channel = socket.channel('games:<%= @conn.params["id"]%>', {player_name: document.getElementById("player_name").value});
+    channel.join().receive('ok', (response) => {
+      console.log(response);
+    });
+  }
+</script>
+

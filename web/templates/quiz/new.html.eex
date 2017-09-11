@@ -1,16 +1,12 @@
 <h1>New Quiz</h1>
 <%= form_tag('/quizzes', method: :post)%>
   <div class="form-group">
-    <label for="quiz[player_name]">Player Name</label>
-    <input type="text" name="quiz[player_name]" class="form-control" />
-
     <label for="quiz[num_players]">Number of Players</label>
     <select name="quiz[num_players]" class="form-control">
       <option>2</option>
       <option>3</option>
       <option>4</option>
     </select>
-
   </div>
   <button type="submit" class="btn btn-primary">Start</button>
 </form>
