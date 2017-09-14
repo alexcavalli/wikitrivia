@@ -41,6 +41,6 @@ config :wikitrivia, Wikitrivia.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
-  database: "wikitrivia_dev",
+  database: "wikitrivia_elixir_dev_2",
   hostname: "localhost",
   pool_size: 10
