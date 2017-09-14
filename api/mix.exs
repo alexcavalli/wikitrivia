@@ -39,7 +39,7 @@ defmodule Wikitrivia.Mixfile do
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:httpoison, "~> 0.8.0"}
+      {:httpoison, "~> 0.13.0"}
     ]
   end
 
