@@ -6,7 +6,13 @@ defmodule Wikitrivia.Questions do
   import Ecto.Query, warn: false
   alias Wikitrivia.Repo
 
-  alias Wikitrivia.Questions.TriviaItem
+  alias Wikitrivia.Questions.{TriviaItem, Question, AnswerChoice}
+  alias Wikitrivia.Questions.TriviaItemGenerator
+
+  def generate_trivia_items(count) do
+    TriviaItemGenerator.generate_trivia_items(count)
+    |> Enum.each(&create_trivia_item/1)
+  end
 
   @doc """
   Returns the list of trivia_items.
