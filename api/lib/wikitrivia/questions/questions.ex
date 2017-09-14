@@ -6,12 +6,46 @@ defmodule Wikitrivia.Questions do
   import Ecto.Query, warn: false
   alias Wikitrivia.Repo
 
-  alias Wikitrivia.Questions.{TriviaItem, Question, AnswerChoice}
-  alias Wikitrivia.Questions.TriviaItemGenerator
+  alias Wikitrivia.Questions.{TriviaItem, Question}
+  alias Wikitrivia.Questions.{TriviaItemGenerator, QuestionGenerator}
 
+  @doc """
+  Generates trivia_items by fetching and parsing articles from Wikipedia.
+  """
   def generate_trivia_items(count) do
     TriviaItemGenerator.generate_trivia_items(count)
     |> Enum.each(&create_trivia_item/1)
+  end
+
+  @doc """
+  Generates questions for trivia_items that are not yet answers to any
+  questions.
+  """
+  def generate_questions_for_new_trivia_items do
+    list_trivia_items_without_questions()
+    |> QuestionGenerator.generate_questions_for_trivia_items
+    |> Enum.each(&create_question/1)
+  end
+
+  @doc """
+  Returns a list of trivia_items that are not yet answers to any questions.
+
+  ## Examples
+
+      iex> list_trivia_items_without_questions()
+      [%TriviaItem{}, ...]
+
+  """
+  def list_trivia_items_without_questions do
+    used_trivia_items = from q in Question,
+      where: not is_nil(q.answer_id),
+      select: [:id, :answer_id]
+
+    unused_trivia_items = from t in TriviaItem,
+      left_join: q in subquery(used_trivia_items), on: q.answer_id == t.id,
+      where: is_nil(q.id)
+
+    Repo.all(unused_trivia_items)
   end
 
   @doc """
@@ -154,6 +188,8 @@ defmodule Wikitrivia.Questions do
   def create_question(attrs \\ %{}) do
     %Question{}
     |> Question.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:answer, attrs[:answer])
+    |> Ecto.Changeset.put_assoc(:answer_choices, attrs[:answer_choices])
     |> Repo.insert()
   end
 
@@ -202,101 +238,5 @@ defmodule Wikitrivia.Questions do
   """
   def change_question(%Question{} = question) do
     Question.changeset(question, %{})
-  end
-
-  alias Wikitrivia.Questions.AnswerChoice
-
-  @doc """
-  Returns the list of answer_choices.
-
-  ## Examples
-
-      iex> list_answer_choices()
-      [%AnswerChoice{}, ...]
-
-  """
-  def list_answer_choices do
-    Repo.all(AnswerChoice)
-  end
-
-  @doc """
-  Gets a single answer_choice.
-
-  Raises `Ecto.NoResultsError` if the Answer choice does not exist.
-
-  ## Examples
-
-      iex> get_answer_choice!(123)
-      %AnswerChoice{}
-
-      iex> get_answer_choice!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_answer_choice!(id), do: Repo.get!(AnswerChoice, id)
-
-  @doc """
-  Creates a answer_choice.
-
-  ## Examples
-
-      iex> create_answer_choice(%{field: value})
-      {:ok, %AnswerChoice{}}
-
-      iex> create_answer_choice(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_answer_choice(attrs \\ %{}) do
-    %AnswerChoice{}
-    |> AnswerChoice.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Updates a answer_choice.
-
-  ## Examples
-
-      iex> update_answer_choice(answer_choice, %{field: new_value})
-      {:ok, %AnswerChoice{}}
-
-      iex> update_answer_choice(answer_choice, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_answer_choice(%AnswerChoice{} = answer_choice, attrs) do
-    answer_choice
-    |> AnswerChoice.changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
-  Deletes a AnswerChoice.
-
-  ## Examples
-
-      iex> delete_answer_choice(answer_choice)
-      {:ok, %AnswerChoice{}}
-
-      iex> delete_answer_choice(answer_choice)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_answer_choice(%AnswerChoice{} = answer_choice) do
-    Repo.delete(answer_choice)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking answer_choice changes.
-
-  ## Examples
-
-      iex> change_answer_choice(answer_choice)
-      %Ecto.Changeset{source: %AnswerChoice{}}
-
-  """
-  def change_answer_choice(%AnswerChoice{} = answer_choice) do
-    AnswerChoice.changeset(answer_choice, %{})
   end
 end
