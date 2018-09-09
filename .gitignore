@@ -24,3 +24,4 @@ erl_crash.dump
 /config/prod.secret.exs
 .vscode
 .elixir_ls
+assets/node_modules
