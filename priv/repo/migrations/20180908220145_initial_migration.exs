@@ -3,9 +3,9 @@ defmodule Wikitrivia.Repo.Migrations.InitialMigration do
 
   def change do
     create table(:trivia_items) do
-      add :title, :string
-      add :description, :string, size: 1024
-      add :redacted_description, :string
+      add :title, :text
+      add :description, :text
+      add :redacted_description, :text
 
       timestamps()
     end

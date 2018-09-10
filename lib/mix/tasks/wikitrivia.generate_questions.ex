@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Wikitrivia.GenerateQuestions do
   def run(_args) do
     Mix.Task.run "app.start"
 
-    trivia_items_without_questions
+    trivia_items_without_questions()
     |> generate_questions
   end
 
