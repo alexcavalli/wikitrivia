@@ -4,8 +4,18 @@ A pretty simple trivia game that fetches all the trivia from Wikipedia.
 
 ## How to run this
 
-You'll need a Postgres database in which to store the questions. Update
-`dev.exs` with the configuration as desired. Then
+Install Erlang and Elixir in whichever way you desire. This project is currently built against:
+* Erlang/OTP 21
+* Elixir 1.7.3
+
+You'll need a Postgres database in which to store the questions. One can easily
+booted with docker compose:
+
+```bash
+docker-compose up -d
+```
+
+Update `dev.exs` with your custom DB configuration if needed. Then
 
 ```bash
 mix deps.get
