@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Wikitrivia.GenerateQuestions do
   def run(_args) do
     Mix.Task.run "app.start"
 
-    trivia_items_without_questions
+    trivia_items_without_questions()
     |> generate_questions
   end
 
@@ -44,7 +44,7 @@ defmodule Mix.Tasks.Wikitrivia.GenerateQuestions do
     answer_choices = generate_answer_choices(answer.id, max_trivia_item_id)
 
     Question.changeset(%Question{}, %{answer: answer, answer_choices: [answer | answer_choices]})
-    |> Repo.insert
+    |> Repo.insert!
   end
 
   defp generate_answer_choices(answer_id, max_trivia_item_id) do
