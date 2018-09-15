@@ -1,0 +1,4 @@
+<h2>Joined Game <%= @game_id %></h2>
+<ul>
+  <li><span id="player"><%= @player %></span> (ME)</li>
+</ul>
