@@ -9,34 +9,34 @@ defmodule Wikitrivia.Game do
     Agent.get(agent_name_by_game_id(game_id), fn s -> s end)
   end
 
-  def add_player(game_id, player_id, player_name) do
-    Agent.update(agent_name_by_game_id(game_id), add_player(player_id, player_name))
+  def add_player(game_id, player_name) do
+    Agent.update(agent_name_by_game_id(game_id), add_player(player_name))
   end
 
-  def award_points(game_id, player_id, points) do
-    Agent.update(agent_name_by_game_id(game_id), award_points(player_id, points))
+  def award_points(game_id, player_name, points) do
+    Agent.update(agent_name_by_game_id(game_id), award_points(player_name, points))
   end
 
   defp default_state do
     %{
-      players: %{},
+      players: MapSet.new(),
       scores: %{}
     }
   end
 
-  defp add_player(player_id, player_name) do
+  defp add_player(player_name) do
     fn (state = %{players: players, scores: scores}) ->
-      players = players |> Map.put(player_id, player_name)
-      scores = scores |> Map.put(player_id, 0)
+      players = players |> MapSet.put(player_name)
+      scores = scores |> Map.put(player_name, 0)
       %{state | players: players, scores: scores}
     end
   end
 
-  defp award_points(player_id, points) do
+  defp award_points(player_name, points) do
     fn (state = %{scores: scores}) ->
-      %{^player_id => player_score} = scores
+      %{^player_name => player_score} = scores
       new_score = player_score + points
-      %{state | scores: %{scores | player_id => new_score}}
+      %{state | scores: %{scores | player_name => new_score}}
     end
   end
 
