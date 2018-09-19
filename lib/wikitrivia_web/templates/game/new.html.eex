@@ -1,0 +1,3 @@
+<%= form_for @conn, game_path(@conn, :create), [as: :create_game], fn _f -> %>
+  <%= submit 'Click Here' %>
+<% end %>

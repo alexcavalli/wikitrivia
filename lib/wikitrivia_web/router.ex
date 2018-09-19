@@ -17,6 +17,7 @@ defmodule WikitriviaWeb.Router do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
+    resources "/games", GameController, only: [:show, :new, :create]
     get "/games/:game_id", GameController, :show
   end
 
