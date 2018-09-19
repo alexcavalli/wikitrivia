@@ -14,6 +14,7 @@ defmodule Wikitrivia.Application do
       supervisor(WikitriviaWeb.Endpoint, []),
       # Start your own worker by calling: Wikitrivia.Worker.start_link(arg1, arg2, arg3)
       # worker(Wikitrivia.Worker, [arg1, arg2, arg3]),
+      {Registry, keys: :unique, name: Registry.Games}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
