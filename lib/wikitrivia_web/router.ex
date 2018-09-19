@@ -18,7 +18,6 @@ defmodule WikitriviaWeb.Router do
 
     get "/", PageController, :index
     resources "/games", GameController, only: [:show, :new, :create]
-    get "/games/:game_id", GameController, :show
   end
 
   # Other scopes may use custom stacks.
