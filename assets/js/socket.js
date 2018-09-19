@@ -65,6 +65,6 @@ channel.on("player_joined", (payload) => {
 channel.join()
        .receive("ok", (resp) => { console.log("Joined successfully", resp) })
        .receive("error", (resp) => { console.log("Unable to join", resp) })
-channel.push("player_joined", {player})
+channel.push("player_joined", {"player": player, "game_id": gameId})
 
 export default socket
