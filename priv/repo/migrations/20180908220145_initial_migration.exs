@@ -2,23 +2,23 @@ defmodule Wikitrivia.Repo.Migrations.InitialMigration do
   use Ecto.Migration
 
   def change do
-    create table(:trivia_items) do
-      add :title, :text
-      add :description, :text
-      add :redacted_description, :text
+    create table(:answers) do
+      add :answer, :text
 
       timestamps()
     end
 
     create table(:questions) do
-      add :answer_id, references(:trivia_items, on_delete: :nothing)
+      add :original, :text
+      add :redacted, :text
+      add :answer_id, references(:answers, on_delete: :nothing) # should this be :correct_answer_id
 
       timestamps()
     end
 
-    create table(:questions_trivia_items, primary_key: false) do
+    create table(:question_answers, primary_key: false) do
       add :question_id, references(:questions, on_delete: :nothing), primary_key: true
-      add :trivia_item_id, references(:trivia_items, on_delete: :nothing), primary_key: true
+      add :answer_id, references(:answers, on_delete: :nothing), primary_key: true
     end
 
     create index(:questions, [:answer_id])

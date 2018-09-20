@@ -1,9 +1,9 @@
-defmodule TriviaItemGenerator do
+defmodule QuestionGenerator do
   @language "en"
   @random_list_base_url "https://#{@language}.wikipedia.org/w/api.php?action=query&format=json&list=random&indexpageids=1&titles=&rnnamespace=0&rnfilterredir=nonredirects"
   @page_data_base_url "https://#{@language}.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&meta=&exintro=1&explaintext=1"
 
-  def generate_trivia_items(num_trivia_items) do
+  def generate_questions(num_trivia_items) do
     generate_total_trivia_items([], num_trivia_items, nil)
   end
 
