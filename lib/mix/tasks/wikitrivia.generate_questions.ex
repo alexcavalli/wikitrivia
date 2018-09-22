@@ -1,64 +1,52 @@
 defmodule Mix.Tasks.Wikitrivia.GenerateQuestions do
   use Mix.Task
 
-  import Ecto.Query, only: [from: 2, last: 1]
-
   alias Wikitrivia.Repo
-  alias Wikitrivia.TriviaItem
   alias Wikitrivia.Question
 
-  @shortdoc "Generates questions for trivia items missing questions"
+  @shortdoc "Generates fake question answers for questions missing fake answers"
 
   @moduledoc """
-    This should not be run without a significant number of trivia items
+    Generates Question DB records from raw questions data in data/questions.json
+
+    This should not be run without a significant number of questions
     available to draw upon for answer choices. 1000 or so should be safe.
+
+    mix wikitrivia.generate_questions
   """
 
   def run(_args) do
     Mix.Task.run "app.start"
 
-    trivia_items_without_questions()
-    |> generate_questions
+    questions = File.read!("data/questions.json")
+    |> Poison.decode!
+    |> Enum.map(fn item -> %{ question: redact(item["question"], item["answer"]), correct_answer: item["answer"]} end)
+
+    questions
+    |> Enum.map(fn question -> Map.put(question, :answer_choices, generate_answer_choices(questions, question.correct_answer)) end)
+    |> Enum.each(&load_question/1)
   end
 
-  defp trivia_items_without_questions do
-    used_trivia_items = from q in Question,
-      where: not is_nil(q.answer_id),
-      select: [:id, :answer_id]
-
-    unused_trivia_items = from t in TriviaItem,
-      left_join: q in subquery(used_trivia_items), on: q.answer_id == t.id,
-      where: is_nil(q.id)
-
-    Repo.all(unused_trivia_items)
+  defp redact(question, answer) do
+    String.replace(question, answer, "___")
+    |> String.trim
   end
 
-  defp generate_questions(trivia_items) do
-    max_trivia_item_id = (TriviaItem |> last |> Repo.one).id
-
-    trivia_items
-    |> Enum.each(fn(answer) -> generate_question(answer, max_trivia_item_id) end)
+  defp generate_answer_choices(questions, correct_answer) do
+    [correct_answer | generate_fake_answers(questions, correct_answer)]
+    |> Enum.shuffle
   end
 
-  defp generate_question(answer, max_trivia_item_id) do
-    answer_choices = generate_answer_choices(answer.id, max_trivia_item_id)
+  defp generate_fake_answers(questions, correct_answer) do
+    questions
+    |> Enum.map(fn question -> question.correct_answer end)
+    |> Enum.filter(fn answer -> answer != correct_answer end)
+    |> Enum.shuffle
+    |> Enum.take(3)
+  end
 
-    Question.changeset(%Question{}, %{answer: answer, answer_choices: [answer | answer_choices]})
+  defp load_question(question) do
+    Question.changeset(%Question{}, question)
     |> Repo.insert!
   end
-
-  defp generate_answer_choices(answer_id, max_trivia_item_id) do
-    generate_random_integers(10, max_trivia_item_id)
-    |> Enum.reject(fn(id) -> answer_id == id end)
-    |> Enum.uniq
-    |> Enum.map(fn(id) -> Repo.get!(TriviaItem, id) end)
-    |> Enum.take(4)
-  end
-
-  defp generate_random_integers(number_to_generate, max), do: generate_random_integers([], number_to_generate, max)
-  defp generate_random_integers(random_integers, 0, _), do: random_integers
-  defp generate_random_integers(random_integers, number_to_generate, max) do
-    generate_random_integers([:rand.uniform(max) | random_integers], number_to_generate - 1, max)
-  end
-
 end
