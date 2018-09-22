@@ -3,7 +3,7 @@ defmodule WikitriviaWeb.GameChannel do
 
   alias Wikitrivia.Game
 
-  def join("game:" <> game_id, _message, socket) do
+  def join("game:" <> _game_id, _message, socket) do
     {:ok, socket}
   end
 
@@ -27,15 +27,15 @@ defmodule WikitriviaWeb.GameChannel do
     end
   end
 
-  defp message_for_timer_state(%{timer_state: :done, scores: scores}) do
-    {"stop_game", scores}
-  end
-
   defp message_for_timer_state(%{timer_state: :question, timer_data: question_data, num_questions_left: num_questions_left}) do
     {"start_question", %{question_number: 6 - num_questions_left, question: question_data}} # This question number calculation is dumb
   end
 
-  defp message_for_timer_state(%{timer_state: :stats, scores: scores}) do
+  defp message_for_timer_state(%{timer_state: :question_results, scores: scores}) do
     {"stop_question", scores}
+  end
+
+  defp message_for_timer_state(%{timer_state: :done, scores: scores}) do
+    {"stop_game", scores}
   end
 end
