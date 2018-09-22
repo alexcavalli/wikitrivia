@@ -2,3 +2,4 @@
 <ul>
   <li><span id="player"><%= @player %></span> (ME)</li>
 </ul>
+<button id="btn-start">Start</button>

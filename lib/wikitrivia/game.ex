@@ -17,14 +17,20 @@ defmodule Wikitrivia.Game do
     Agent.update(agent_name_by_game_id(game_id), award_points(player_name, points))
   end
 
-  def start_question(game_id) do
-    Agent.update(agent_name_by_game_id(game_id), start_question())
-    Task.async(fn -> :timer.sleep(5000) ; stop_question(game_id) end)
+  def start(game_id, socket) do
+    start_question(game_id, socket)
   end
 
-  def stop_question(game_id) do
+  def start_question(game_id, socket) do
+    Agent.update(agent_name_by_game_id(game_id), start_question())
+    WikitriviaWeb.GameChannel.broadcast_message(socket, "start_question", %{question: "some question data"}) # TODO: refactor
+    Task.async(fn -> :timer.sleep(5000) ; stop_question(game_id, socket) end)
+  end
+
+  def stop_question(game_id, socket) do
     Agent.update(agent_name_by_game_id(game_id), stop_question())
-    Task.async(fn -> :timer.sleep(5000) ; start_question(game_id) end)
+    WikitriviaWeb.GameChannel.broadcast_message(socket, "stop_question", %{}) # TODO: refactor
+    Task.async(fn -> :timer.sleep(5000) ; start_question(game_id, socket) end)
   end
 
   defp default_state do

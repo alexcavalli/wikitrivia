@@ -13,4 +13,16 @@ defmodule WikitriviaWeb.GameChannel do
     broadcast! socket, "player_joined", %{player: player, players: players}
     {:noreply, socket}
   end
+
+  def handle_in("go", %{"game_id" => game_id}, socket) do
+    Game.start(game_id, socket)
+    {:noreply, socket}
+  end
+
+  # This is probably not the right way to do this as it introduces a circular dependency between
+  # Game and GameChannel. I think probably the better way to do it would be to hand off a callback
+  # function to the Game to trigger on various state changes.
+  def broadcast_message(socket, message_type, message) do
+    broadcast! socket, message_type, message
+  end
 end
