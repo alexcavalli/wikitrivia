@@ -5,7 +5,7 @@ defmodule Wikitrivia.Repo.Migrations.InitialMigration do
     create table(:questions) do
       add :question, :text
       add :correct_answer, :text
-      add :answers, {:array, :text}
+      add :answer_choices, {:array, :text}
 
       timestamps()
     end

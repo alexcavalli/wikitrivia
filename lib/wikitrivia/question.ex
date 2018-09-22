@@ -3,11 +3,9 @@ defmodule Wikitrivia.Question do
   import Ecto.Changeset
 
   schema "questions" do
-    field :original, :string
-    field :redacted, :string
-
-    belongs_to :answer, Wikitrivia.Answer
-    many_to_many :answer_choices, Wikitrivia.Answer, join_through: "question_answers"
+    field :question, :string
+    field :correct_answer, :string
+    field :answer_choices, {:array, :string}
 
     timestamps()
   end
@@ -15,8 +13,6 @@ defmodule Wikitrivia.Question do
   @doc false
   def changeset(question, attrs) do
     question
-    |> cast(attrs, [:original, :redacted])
-    |> put_assoc(:answer, attrs[:answer], required: true)
-    |> put_assoc(:answer_choices, attrs[:answer_choices], required: true)
+    |> cast(attrs, [:question, :correct_answer, :answer_choices])
   end
 end
