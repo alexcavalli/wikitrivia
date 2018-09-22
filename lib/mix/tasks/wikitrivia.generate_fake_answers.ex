@@ -57,5 +57,4 @@ defmodule Mix.Tasks.Wikitrivia.GenerateFakeAnswers do
   defp generate_random_integers(random_integers, number_to_generate, max) do
     generate_random_integers([:rand.uniform(max) | random_integers], number_to_generate - 1, max)
   end
-
 end

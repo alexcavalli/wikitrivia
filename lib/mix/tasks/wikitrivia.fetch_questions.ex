@@ -1,9 +1,6 @@
 defmodule Mix.Tasks.Wikitrivia.FetchQuestions do
   use Mix.Task
 
-  alias Wikitrivia.Question
-  alias Wikitrivia.Repo
-
   @shortdoc "Fetches trivia questions from Wikipedia data and loads it into the DB 'mix wikitrivia.fetch_questions <num>'"
   @language "en"
   @random_list_base_url "https://#{@language}.wikipedia.org/w/api.php?action=query&format=json&list=random&indexpageids=1&titles=&rnnamespace=0&rnfilterredir=nonredirects"
@@ -24,9 +21,13 @@ defmodule Mix.Tasks.Wikitrivia.FetchQuestions do
   end
 
   defp load_questions(questions) do
-    questions
-    |> Enum.map(fn item -> Question.changeset(%Question{}, %{original: item.description, redacted: item.redacted_description, answer: %{answer: item.title}, answer_choices: []}) end)
-    |> Enum.each(&Repo.insert!/1)
+    {:ok, file} = File.open("data/questions.json", [:write])
+    {:ok, encoded_questions} = questions
+    #|> Enum.map(fn item -> Question.changeset(%Question{}, %{original: item.description, redacted: item.redacted_description, answer: %{answer: item.title}, answer_choices: []}) end)
+    |> Enum.map(fn item -> %{question: item.description} end)
+    |> JSON.encode
+    :ok = IO.binwrite(file, encoded_questions)
+    :ok = File.close(file)
   end
 
   # TODO: Clean this up a bit. Change num_questions param to what num_questions_needed currently is.
