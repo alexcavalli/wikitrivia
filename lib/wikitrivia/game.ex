@@ -17,6 +17,16 @@ defmodule Wikitrivia.Game do
     Agent.update(agent_name_by_game_id(game_id), award_points(player_name, points))
   end
 
+  def start_question(game_id) do
+    Agent.update(agent_name_by_game_id(game_id), start_question())
+    Task.async(fn -> :timer.sleep(5000) ; stop_question(game_id) end)
+  end
+
+  def stop_question(game_id) do
+    Agent.update(agent_name_by_game_id(game_id), stop_question())
+    Task.async(fn -> :timer.sleep(5000) ; start_question(game_id) end)
+  end
+
   defp default_state do
     %{
       players: MapSet.new(),
@@ -38,6 +48,14 @@ defmodule Wikitrivia.Game do
       new_score = player_score + points
       %{state | scores: %{scores | player_name => new_score}}
     end
+  end
+
+  defp start_question do
+    fn (state) -> Map.put(state, :question, true) end
+  end
+
+  defp stop_question do
+    fn (state) -> Map.put(state, :question, false) end
   end
 
   defp agent_name_by_game_id(game_id) do
