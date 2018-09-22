@@ -17,26 +17,24 @@ defmodule Wikitrivia.Game do
     Agent.update(agent_name_by_game_id(game_id), award_points(player_name, points))
   end
 
-  def start(game_id, socket) do
-    start_question(game_id, socket)
+  def start(game_id, game_timer_callback) do
+    start_question(game_id, game_timer_callback)
   end
 
-  def start_question(game_id, socket) do
-    Agent.update(agent_name_by_game_id(game_id), start_question())
-    WikitriviaWeb.GameChannel.broadcast_message(socket, "start_question", %{question: "some question data"}) # TODO: refactor
-    Task.async(fn -> :timer.sleep(5000) ; stop_question(game_id, socket) end)
-  end
-
-  def stop_question(game_id, socket) do
-    Agent.update(agent_name_by_game_id(game_id), stop_question())
-    WikitriviaWeb.GameChannel.broadcast_message(socket, "stop_question", %{}) # TODO: refactor
-    Task.async(fn -> :timer.sleep(5000) ; start_question(game_id, socket) end)
-  end
-
+  # State structure of a Game. Details:
+  #   * players - Set of all players in this game.
+  #   * scores - Map of all player scores in this game, keyed by player name
+  #   * num_questions_left - Number of questions remaining to answer in this game
+  #   * timer_state - Current state of timed component of this game. :off when not in a timed
+  #       period, otherwise the name of the period (:question, :stats)
+  #   * timer_data - Data associated with the timer_state (e.g. the question)
   defp default_state do
     %{
       players: MapSet.new(),
-      scores: %{}
+      scores: %{},
+      num_questions_left: 5,
+      timer_state: :off,
+      timer_data: %{}
     }
   end
 
@@ -56,12 +54,34 @@ defmodule Wikitrivia.Game do
     end
   end
 
+  defp start_question(game_id, game_timer_callback) do
+    Agent.update(agent_name_by_game_id(game_id), start_question())
+    game_timer_callback.()
+    Task.async(fn -> :timer.sleep(5000) ; stop_question(game_id, game_timer_callback) end)
+  end
+
   defp start_question do
-    fn (state) -> Map.put(state, :question, true) end
+    fn (state) -> %{state | timer_state: :question, timer_data: %{question: "data"}} end
+  end
+
+  defp stop_question(game_id, game_timer_callback) do
+    Agent.update(agent_name_by_game_id(game_id), stop_question())
+    game_timer_callback.()
+    unless game_finished?(game_id) do
+      Task.async(fn -> :timer.sleep(5000) ; start_question(game_id, game_timer_callback) end)
+    end
   end
 
   defp stop_question do
-    fn (state) -> Map.put(state, :question, false) end
+    fn (state = %{num_questions_left: num_questions_left}) ->
+      num_questions_left = num_questions_left - 1
+      timer_state = if num_questions_left == 0, do: :done, else: :stats
+      %{state | num_questions_left: num_questions_left, timer_state: timer_state, timer_data: %{}}
+    end
+  end
+
+  defp game_finished?(game_id) do
+    get_game_state(game_id).timer_state == :done
   end
 
   defp agent_name_by_game_id(game_id) do

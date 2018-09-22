@@ -73,6 +73,12 @@ channel.on("stop_question", (payload) => {
   console.log("stopping question")
   console.log(payload)
 })
+
+channel.on("stop_game", (payload) => {
+  console.log("game is done")
+  console.log(payload)
+})
+
 channel.join()
        .receive("ok", (resp) => { console.log("Joined successfully", resp) })
        .receive("error", (resp) => { console.log("Unable to join", resp) })

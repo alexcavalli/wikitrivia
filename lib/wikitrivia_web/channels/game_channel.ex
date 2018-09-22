@@ -15,14 +15,27 @@ defmodule WikitriviaWeb.GameChannel do
   end
 
   def handle_in("go", %{"game_id" => game_id}, socket) do
-    Game.start(game_id, socket)
+    Game.start(game_id, game_timer_callback(game_id, socket))
     {:noreply, socket}
   end
 
-  # This is probably not the right way to do this as it introduces a circular dependency between
-  # Game and GameChannel. I think probably the better way to do it would be to hand off a callback
-  # function to the Game to trigger on various state changes.
-  def broadcast_message(socket, message_type, message) do
-    broadcast! socket, message_type, message
+  def game_timer_callback(game_id, socket) do
+    fn ->
+      game_state = Game.get_game_state(game_id)
+      {message_type, message_data} = message_for_timer_state(game_state)
+      broadcast! socket, message_type, message_data
+    end
+  end
+
+  defp message_for_timer_state(%{timer_state: :done, scores: scores}) do
+    {"stop_game", scores}
+  end
+
+  defp message_for_timer_state(%{timer_state: :question, timer_data: question_data, num_questions_left: num_questions_left}) do
+    {"start_question", %{question_number: 6 - num_questions_left, question: question_data}} # This question number calculation is dumb
+  end
+
+  defp message_for_timer_state(%{timer_state: :stats, scores: scores}) do
+    {"stop_question", scores}
   end
 end
