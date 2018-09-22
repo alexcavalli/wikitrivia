@@ -1,4 +1,5 @@
 <h2>Joined Game <%= @game_id %></h2>
+<h3 id="timer">Timer here</h3>
 <ul>
   <li><span id="player"><%= @player %></span> (ME)</li>
 </ul>

@@ -60,6 +60,15 @@ const player = document.getElementById("player").innerText
 const btnStart = document.getElementById("btn-start")
 let channel = socket.channel(`game:${gameId}`, {})
 
+// Begin garbage code
+var timeLeft = 0
+let updateTimer = function() {
+  document.getElementById("timer").innerText = timeLeft
+  timeLeft -= 1
+}
+var timerInterval
+// End garbage code
+
 channel.on("player_joined", (payload) => {
   console.log(payload)
 })
@@ -67,16 +76,34 @@ channel.on("player_joined", (payload) => {
 channel.on("start_question", (payload) => {
   console.log("starting question")
   console.log(payload)
+
+  // Begin garbage code
+  clearInterval(timerInterval)
+  timeLeft = 5
+  updateTimer()
+  timerInterval = setInterval(updateTimer, 1000)
+  // End garbage code
 })
 
 channel.on("stop_question", (payload) => {
   console.log("stopping question")
   console.log(payload)
+
+  // Begin garbage code
+  clearInterval(timerInterval)
+  timeLeft = 5
+  updateTimer()
+  timerInterval = setInterval(updateTimer, 1000)
+  // End garbage code
 })
 
 channel.on("stop_game", (payload) => {
   console.log("game is done")
   console.log(payload)
+
+  // Begin garbage code
+  clearInterval(timerInterval)
+  // End garbage code
 })
 
 channel.join()
