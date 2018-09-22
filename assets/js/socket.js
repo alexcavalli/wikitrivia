@@ -61,12 +61,12 @@ const btnStart = document.getElementById("btn-start")
 let channel = socket.channel(`game:${gameId}`, {})
 
 // Begin garbage code
-var timeLeft = 0
+let timeLeft = 0
 let updateTimer = function() {
   document.getElementById("timer").innerText = timeLeft
   timeLeft -= 1
 }
-var timerInterval
+let timerInterval
 // End garbage code
 
 channel.on("player_joined", (payload) => {
