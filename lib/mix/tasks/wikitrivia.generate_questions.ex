@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Wikitrivia.GenerateQuestions do
   @shortdoc "Generates fake question answers for questions missing fake answers"
 
   @moduledoc """
-    Generates fake question answers for questions missing fake answers
+    Generates Question DB records from raw questions data in data/questions.json
 
     This should not be run without a significant number of questions
     available to draw upon for answer choices. 1000 or so should be safe.

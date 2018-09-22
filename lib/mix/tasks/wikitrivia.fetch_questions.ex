@@ -28,6 +28,7 @@ defmodule Mix.Tasks.Wikitrivia.FetchQuestions do
   end
 
   defp load_questions(questions) do
+    File.mkdir_p("data")
     file = File.open!("data/questions.json", [:write])
     encoded_questions = questions
     |> Enum.map(fn item -> %{question: item.description, answer: item.title} end)
@@ -100,7 +101,6 @@ defmodule Mix.Tasks.Wikitrivia.FetchQuestions do
     pages
     |> Enum.map(&new_question/1)
     |> Enum.filter(&valid_question?/1)
-    |> Enum.map(&redact_question_title/1)
   end
 
   defp new_question(%{"extract" => description, "title" => title}) do
@@ -109,10 +109,6 @@ defmodule Mix.Tasks.Wikitrivia.FetchQuestions do
 
   defp valid_question?(%{} = question) do
     String.contains?(question.description, question.title)
-  end
-
-  defp redact_question_title(%{} = question) do
-    Map.put(question, :redacted_description, String.replace(question.description, question.title, "___"))
   end
 
   defp clean_description(description) do
