@@ -1,14 +1,21 @@
 defmodule Mix.Tasks.Wikitrivia.FetchQuestions do
   use Mix.Task
 
-  @shortdoc "Fetches trivia questions from Wikipedia data and loads it into the DB 'mix wikitrivia.fetch_questions <num>'"
+  @shortdoc "Fetch trivia questions from Wikipedia and load into data/questions.json"
   @language "en"
   @random_list_base_url "https://#{@language}.wikipedia.org/w/api.php?action=query&format=json&list=random&indexpageids=1&titles=&rnnamespace=0&rnfilterredir=nonredirects"
   @page_data_base_url "https://#{@language}.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&meta=&exintro=1&explaintext=1"
 
+  @moduledoc """
+    Fetch trivia questions from Wikipedia and load into data/questions.json
+
+    mix wikitrivia.fetch_questions <num>
+  """
+
   def run(args) do
     Mix.Task.run "app.start"
     Mix.shell.info "Fetching trivia questions from Wikipedia..."
+
     args
     |> List.first
     |> String.to_integer
@@ -21,11 +28,10 @@ defmodule Mix.Tasks.Wikitrivia.FetchQuestions do
   end
 
   defp load_questions(questions) do
-    {:ok, file} = File.open("data/questions.json", [:write])
-    {:ok, encoded_questions} = questions
-    #|> Enum.map(fn item -> Question.changeset(%Question{}, %{original: item.description, redacted: item.redacted_description, answer: %{answer: item.title}, answer_choices: []}) end)
-    |> Enum.map(fn item -> %{question: item.description} end)
-    |> JSON.encode
+    file = File.open!("data/questions.json", [:write])
+    encoded_questions = questions
+    |> Enum.map(fn item -> %{question: item.description, answer: item.title} end)
+    |> Poison.encode!
     :ok = IO.binwrite(file, encoded_questions)
     :ok = File.close(file)
   end
