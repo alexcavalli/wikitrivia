@@ -92,9 +92,11 @@ function redraw(state) {
     game.removeChild(game.lastChild)
   }
 
-  const join_game_link = `<p>Join Game Link: ${window.location}</p>`
   const player_name_input = createPlayerNameInput(player_name)
+  const join_game_link = document.createElement('p')
 
+  join_game_link.appendChild(document.createTextNode(`Join Game Link: ${window.location}`))
+  game.appendChild(join_game_link)
   game.appendChild(player_name_input)
   game.appendChild(createOpponentsList(player_id, state))
   player_name_input.focus()
