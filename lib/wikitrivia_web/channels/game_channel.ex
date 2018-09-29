@@ -24,8 +24,6 @@ defmodule WikitriviaWeb.GameChannel do
 
     game_state = Game.get_game_state(game_id)
 
-    IO.inspect(game_state)
-
     broadcast! socket, "player_update", %{ game_state: game_state, player_id: player_id }
     {:noreply, socket}
   end
