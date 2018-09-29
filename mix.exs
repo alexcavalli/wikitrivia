@@ -42,7 +42,8 @@ defmodule Wikitrivia.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:httpoison, "~> 1.0"},
-      {:json, "~> 1.2"}
+      {:json, "~> 1.2"},
+      {:distillery, "~> 2.0"}
     ]
   end
 
