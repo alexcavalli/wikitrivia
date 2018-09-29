@@ -30,8 +30,8 @@ defmodule Wikitrivia.Game do
   #   * players - Set of all players in this game.
   #   * scores - Map of all player scores in this game, keyed by player name
   #   * num_questions_left - Number of questions remaining to answer in this game
-  #   * timer_state - Current state of timed component of this game. :off when not in a timed
-  #       period, otherwise the name of the period (:question, :stats)
+  #   * timer_state - Current state of timed component of this game. :off before entering timed
+  #       periods, otherwise the name of the period (:question, :question_results, :done)
   #   * timer_data - Data associated with the timer_state (e.g. the question)
   defp default_state do
     %{
