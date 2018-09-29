@@ -4,6 +4,7 @@
 // To use Phoenix channels, the first step is to import Socket
 // and connect at the socket path in "lib/web/endpoint.ex":
 import {Socket} from "phoenix"
+const uuid = require('uuid/v1')
 
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 
@@ -55,16 +56,87 @@ socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
 
-const gameId = window.location.pathname.split("/")[2];
-const player = document.getElementById("player").innerText
-let channel = socket.channel(`game:${gameId}`, {})
+const game_id = document.getElementById("game_id").value
+const channel = socket.channel(`game:${game_id}`, {})
 
-channel.on("player_joined", (payload) => {
-  console.log(payload)
+function generatePlayerId() {
+  return uuid();
+}
+
+function getPlayerId() {
+  let playerId = document.cookie.replace(/(?:(?:^|.*;\s*)player_id\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+
+  if (!playerId) {
+    playerId = generatePlayerId()
+
+    setPlayerId(playerId)
+  }
+
+  return playerId
+}
+
+function setPlayerId(player_id) {
+  document.cookie = `player_id=${player_id}`
+}
+
+function changePlayerName(player_name) {
+  channel.push("player_update", { game_id, player_id: getPlayerId(), player_name })
+}
+
+function redraw(state) {
+  const player_id = getPlayerId();
+  const player_name = state.game_state.player_names[player_id]
+  const game = document.getElementById("game")
+
+  while (game.hasChildNodes()) {
+    game.removeChild(game.lastChild)
+  }
+
+  const join_game_link = `<p>Join Game Link: ${window.location}</p>`
+  const player_name_input = createPlayerNameInput(player_name)
+
+  game.appendChild(player_name_input)
+  game.appendChild(createOpponentsList(player_id, state))
+  player_name_input.focus()
+}
+
+function createOpponentsList(player_id, state) {
+  const ul = document.createElement('ul')
+
+  for (let id in state.game_state.player_names) {
+    if (id !== player_id) {
+      const li = document.createElement('li')
+
+      li.appendChild(document.createTextNode(state.game_state.player_names[id]))
+      ul.appendChild(li)
+    }
+  }
+
+  return ul
+}
+
+function createPlayerNameInput(player_name) {
+  const element = document.createElement('input');
+  element.id = "player_name"
+  element.type = "text"
+  element.value = player_name
+  element.oninput = (event) => {
+    changePlayerName(event.target.value)
+  }
+
+  return element
+}
+
+channel.on("player_update", (state) => {
+  redraw(state)
+})
+
+channel.on("player_joined", (state) => {
+  redraw(state)
 })
 channel.join()
        .receive("ok", (resp) => { console.log("Joined successfully", resp) })
        .receive("error", (resp) => { console.log("Unable to join", resp) })
-channel.push("player_joined", {"player": player, "game_id": gameId})
+channel.push("player_joined", { game_id, player_id: getPlayerId() })
 
 export default socket
