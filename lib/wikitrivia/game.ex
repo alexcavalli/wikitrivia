@@ -1,7 +1,10 @@
 defmodule Wikitrivia.Game do
+  @question_period_ms 5000
+  @post_question_period_ms 5000
+
   def create_game do
     game_id = Ecto.UUID.generate
-    {:ok, _} = Agent.start_link(fn -> default_state end, name: agent_name_by_game_id(game_id))
+    {:ok, _} = Agent.start_link(fn -> default_state() end, name: agent_name_by_game_id(game_id))
     game_id
   end
 
@@ -17,10 +20,26 @@ defmodule Wikitrivia.Game do
     Agent.update(agent_name_by_game_id(game_id), award_points(player_name, points))
   end
 
+  # Starts the pose question -> show results loop. Ends after num_questions_left reaches 0.
+  # game_timer_callback function will be called after every timed state change.
+  def start(game_id, game_timer_callback) do
+    start_question(game_id, game_timer_callback)
+  end
+
+  # State structure of a Game. Details:
+  #   * players - Set of all players in this game.
+  #   * scores - Map of all player scores in this game, keyed by player name
+  #   * num_questions_left - Number of questions remaining to answer in this game
+  #   * timer_state - Current state of timed component of this game. :off before entering timed
+  #       periods, otherwise the name of the period (:question, :question_results, :done)
+  #   * timer_data - Data associated with the timer_state (e.g. the question)
   defp default_state do
     %{
       players: MapSet.new(),
-      scores: %{}
+      scores: %{},
+      num_questions_left: 5,
+      timer_state: :off,
+      timer_data: %{}
     }
   end
 
@@ -38,6 +57,41 @@ defmodule Wikitrivia.Game do
       new_score = player_score + points
       %{state | scores: %{scores | player_name => new_score}}
     end
+  end
+
+  defp start_question(game_id, game_timer_callback) do
+    Agent.update(agent_name_by_game_id(game_id), start_question_phase())
+    game_timer_callback.()
+    Task.async(fn -> execute_after_delay(@question_period_ms, fn -> stop_question(game_id, game_timer_callback) end) end)
+  end
+
+  defp start_question_phase do
+    fn (state) -> %{state | timer_state: :question, timer_data: %{question: "data"}} end
+  end
+
+  defp stop_question(game_id, game_timer_callback) do
+    Agent.update(agent_name_by_game_id(game_id), stop_question_phase())
+    game_timer_callback.()
+    unless game_finished?(game_id) do
+      Task.async(fn -> execute_after_delay(@post_question_period_ms, fn -> start_question(game_id, game_timer_callback) end) end)
+    end
+  end
+
+  defp stop_question_phase do
+    fn (state = %{num_questions_left: num_questions_left}) ->
+      num_questions_left = num_questions_left - 1
+      timer_state = if num_questions_left <= 0, do: :done, else: :question_results
+      %{state | num_questions_left: num_questions_left, timer_state: timer_state, timer_data: %{}}
+    end
+  end
+
+  defp execute_after_delay(delay, execute) do
+    :timer.sleep(delay)
+    execute.()
+  end
+
+  defp game_finished?(game_id) do
+    get_game_state(game_id).timer_state == :done
   end
 
   defp agent_name_by_game_id(game_id) do

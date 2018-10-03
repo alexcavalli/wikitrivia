@@ -57,14 +57,62 @@ socket.connect()
 
 const gameId = window.location.pathname.split("/")[2];
 const player = document.getElementById("player").innerText
+const btnStart = document.getElementById("btn-start")
 let channel = socket.channel(`game:${gameId}`, {})
+
+// Begin garbage code
+let timeLeft = 0
+let updateTimer = function() {
+  document.getElementById("timer").innerText = timeLeft
+  timeLeft -= 1
+}
+let timerInterval
+// End garbage code
 
 channel.on("player_joined", (payload) => {
   console.log(payload)
 })
+
+channel.on("start_question", (payload) => {
+  console.log("starting question")
+  console.log(payload)
+
+  // Begin garbage code
+  clearInterval(timerInterval)
+  timeLeft = 5
+  updateTimer()
+  timerInterval = setInterval(updateTimer, 1000)
+  // End garbage code
+})
+
+channel.on("stop_question", (payload) => {
+  console.log("stopping question")
+  console.log(payload)
+
+  // Begin garbage code
+  clearInterval(timerInterval)
+  timeLeft = 5
+  updateTimer()
+  timerInterval = setInterval(updateTimer, 1000)
+  // End garbage code
+})
+
+channel.on("stop_game", (payload) => {
+  console.log("game is done")
+  console.log(payload)
+
+  // Begin garbage code
+  clearInterval(timerInterval)
+  // End garbage code
+})
+
 channel.join()
        .receive("ok", (resp) => { console.log("Joined successfully", resp) })
        .receive("error", (resp) => { console.log("Unable to join", resp) })
 channel.push("player_joined", {"player": player, "game_id": gameId})
+
+btnStart.onclick = function() {
+  channel.push("go", {"game_id": gameId})
+}
 
 export default socket
