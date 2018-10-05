@@ -1,36 +1,127 @@
-<div class="jumbotron">
-  <h2><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
-  <p class="lead">A productive web framework that<br />does not compromise speed and maintainability.</p>
-</div>
-
-<div class="row marketing">
-  <div class="col-lg-6">
-    <h4>Resources</h4>
-    <ul>
-      <li>
-        <a href="http://phoenixframework.org/docs/overview">Guides</a>
-      </li>
-      <li>
-        <a href="https://hexdocs.pm/phoenix">Docs</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix">Source</a>
-      </li>
-    </ul>
-  </div>
-
-  <div class="col-lg-6">
-    <h4>Help</h4>
-    <ul>
-      <li>
-        <a href="http://groups.google.com/group/phoenix-talk">Mailing list</a>
-      </li>
-      <li>
-        <a href="http://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on freenode IRC</a>
-      </li>
-      <li>
-        <a href="https://twitter.com/elixirphoenix">@elixirphoenix</a>
-      </li>
-    </ul>
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card">
+      <div class="card-body text-white bg-info">
+        <h1 id="question-number" class="card-title">Question 1</h1>
+        <h3 id="question" class="card-text"></h3>
+      </div>
+      <div class="list-group list-group-flush bg-light btn-group-toggle text-center" data-toggle="buttons">
+        <label class="answer-choice btn btn-default list-group-item list-group-item-action"><input type="radio" name="answer-choices"></label>
+        <label class="answer-choice btn btn-default list-group-item list-group-item-action"><input type="radio" name="answer-choices"></label>
+        <label class="answer-choice btn btn-default list-group-item list-group-item-action"><input type="radio" name="answer-choices"></label>
+        <label class="answer-choice btn btn-default list-group-item list-group-item-action"><input type="radio" name="answer-choices"></label>
+      </div>
+      <div class="card-footer text-center text-white bg-info">
+        <h3 id="timer"></h3>
+      </div>
+      <div id="who-answered" class="card-body">
+        <p>Who's answered?</p>
+      </div>
+    </div>
   </div>
 </div>
+
+<script>
+  questionData = {
+    answer_choices: ["Petrine", "Cemetry Road", "Josefina Aguilar", "Seagull Books"],
+    correct_answer: "Josefina Aguilar",
+    question: "___ is a Mexican folk artist from Ocotlán de Morelos, Oaxaca."
+  };
+
+  document.getElementById("question").innerText = questionData.question;
+
+  const answerChoiceBtns = document.getElementsByClassName("answer-choice");
+
+  let disableAnswerChoices = function() {
+    Array.prototype.forEach.call(answerChoiceBtns, function(btnAnswerChoice) {
+      btnAnswerChoice.firstChild.disabled = true;
+    });
+  }
+
+  let selectedAnswer = "";
+
+  let revealAnswer = function() {
+    Array.prototype.forEach.call(answerChoiceBtns, function(btnAnswerChoice) {
+      btnAnswerChoice.classList.remove("list-group-item-warning");
+      const answerText = btnAnswerChoice.innerText;
+      if (selectedAnswer && selectedAnswer === answerText) {
+        const yourBadge = document.getElementById("you-answered-badge");
+        yourBadge.classList.remove("badge-primary");
+        if (selectedAnswer === questionData.correct_answer) {
+          btnAnswerChoice.classList.add("list-group-item-success");
+          yourBadge.classList.add("badge-success");
+        } else {
+          btnAnswerChoice.classList.add("list-group-item-danger");
+          yourBadge.classList.add("badge-danger");
+        }
+      }
+    })
+
+    // Fake other people answering results: (this is all nonsense, ignore this code, these would
+    // be triggered by the backend revealing who was right and wrong).
+    const answeredBadges = document.getElementById("who-answered").childNodes;
+    Array.prototype.forEach.call(answeredBadges, function(badge) {
+      if (badge.id === "you-answered-badge") { return; }
+      if (badge.nodeName !== "SPAN") { return; }
+
+      badge.classList.remove("badge-primary");
+      // flip a coin on them getting the answer right
+      if (Math.floor(Math.random() * 2) == 0) {
+        badge.classList.add("badge-success");
+      } else {
+        badge.classList.add("badge-danger");
+      }
+    });
+  };
+
+  // `this` receiver is the answer button selected
+  let selectAnswer = function() {
+    selectedAnswer = this.innerText;
+    this.classList.add("list-group-item-warning");
+    // time left offset here is due to the weird way this timer is working (the current value of
+    // timeLeft is actually the next value on the timer, i.e. it's always a second ahead of reality)
+    addUserAnsweredBadge("You", timeLeft + 1, true);
+    disableAnswerChoices();
+  };
+
+  let addUserAnsweredBadge = function(username, answerTime, isYou) {
+    let badge = document.createElement("span");
+    if (isYou) {
+      badge.id = "you-answered-badge";
+    }
+    badge.classList.add("badge");
+    badge.classList.add("badge-primary");
+    badge.appendChild(document.createTextNode(username + " (" + answerTime + ")"));
+    document.getElementById("who-answered").appendChild(badge);
+  };
+
+  Array.prototype.forEach.call(answerChoiceBtns, function(btnAnswerChoice, index) {
+    btnAnswerChoice.appendChild(document.createTextNode(questionData.answer_choices[index]));
+    btnAnswerChoice.addEventListener("click", selectAnswer);
+  });
+
+  let timeLeft = 10;
+  let updateTimeLeft = function() {
+    document.getElementById("timer").innerText = timeLeft;
+    timeLeft -= 1;
+    if (timeLeft >= 0) {
+      setTimeout(updateTimeLeft, 1000);
+    } else {
+      revealAnswer();
+      disableAnswerChoices();
+    };
+
+    // Fake other people answering: (this is all nonsense, ignore this code, these would be
+    // triggered by the backend).
+    if (timeLeft === 7) {
+      addUserAnsweredBadge("Howard", 8, false);
+    }
+    if (timeLeft === 5) {
+      addUserAnsweredBadge("Josh", 6, false);
+    }
+    if (timeLeft === 2) {
+      addUserAnsweredBadge("Dennis", 3, false);
+    }
+  };
+  updateTimeLeft();
+</script>
