@@ -21,9 +21,11 @@ defmodule Wikitrivia.Game do
   @default_num_questions 4
 
   # General events
-  def create(num_questions \\ @default_num_questions) do
+  def create(game_name, num_questions \\ @default_num_questions) do
     game_id = Ecto.UUID.generate
-    {:ok, _} = Agent.start_link(fn -> default_state(num_questions) end, name: agent_name_by_game_id(game_id))
+    # TODO: need to handle the case where this agent crashes
+    # currently get the error message: "the process is not alive or there's no process currently associated with the given name, possibly because its application isn't started"
+    {:ok, _} = Agent.start_link(fn -> init_state(game_name, num_questions) end, name: agent_name_by_game_id(game_id))
     game_id
   end
 
@@ -32,8 +34,29 @@ defmodule Wikitrivia.Game do
   end
 
   # User events
-  def add_player(game_id, player_name) do
-    Agent.update(agent_name_by_game_id(game_id), add_player(player_name))
+  def has_player(game_id, player_id) do
+    Agent.get(agent_name_by_game_id(game_id), fn s -> MapSet.member?(s.players, player_id) end)
+  end
+
+  def add_player(game_id, player_id) do
+    player_name = "anonymous"
+
+    # TODO: need to handle games that don't exist
+    Agent.update(agent_name_by_game_id(game_id), fn (state = %{players: players, scores: scores, player_names: player_names}) ->
+      players = players |> MapSet.put(player_id)
+      scores = scores |> Map.put(player_id, 0)
+      player_names = player_names |> Map.put(player_id, player_name)
+      %{state | players: players, scores: scores, player_names: player_names}
+    end)
+
+    player_id
+  end
+
+  def update_player_name(game_id, player_id, player_name) do
+    Agent.update(agent_name_by_game_id(game_id), fn (state = %{player_names: player_names}) ->
+      player_names = player_names |> Map.put(player_id, player_name)
+      %{ state | player_names: player_names }
+    end)
   end
 
   def award_points(game_id, player_name, points) do
@@ -58,22 +81,15 @@ defmodule Wikitrivia.Game do
   #                           question phase after a time period.
   #     * :game_results - Final phase, with final results.
   #   * timer_data - Data associated with the game_phase (e.g. the question)
-  defp default_state(num_questions) do
+  defp init_state(game_name, num_questions) do
     %{
-      players: MapSet.new(),
+      name: game_name,
+      player_names: %{}
       scores: %{},
       num_questions: num_questions,
       game_phase: :lobby,
       timer_data: %{}
     }
-  end
-
-  defp add_player(player_name) do
-    fn (state = %{players: players, scores: scores}) ->
-      players = players |> MapSet.put(player_name)
-      scores = scores |> Map.put(player_name, 0)
-      %{state | players: players, scores: scores}
-    end
   end
 
   defp award_points(player_name, points) do

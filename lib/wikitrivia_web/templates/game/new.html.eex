@@ -1,3 +1,6 @@
-<%= form_for @conn, game_path(@conn, :create), [as: :create_game], fn _f -> %>
+<%= form_for @conn, game_path(@conn, :create), [as: :create_game], fn f -> %>
+  <label>
+    Game Name: <%= text_input f, :game_name %>
+  </label>
   <%= submit 'Click Here' %>
 <% end %>
