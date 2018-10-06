@@ -40,40 +40,6 @@
 
   let selectedAnswer = "";
 
-  let revealAnswer = function() {
-    Array.prototype.forEach.call(answerChoiceBtns, function(btnAnswerChoice) {
-      btnAnswerChoice.classList.remove("list-group-item-warning");
-      const answerText = btnAnswerChoice.innerText;
-      if (selectedAnswer && selectedAnswer === answerText) {
-        const yourBadge = document.getElementById("you-answered-badge");
-        yourBadge.classList.remove("badge-primary");
-        if (selectedAnswer === questionData.correct_answer) {
-          btnAnswerChoice.classList.add("list-group-item-success");
-          yourBadge.classList.add("badge-success");
-        } else {
-          btnAnswerChoice.classList.add("list-group-item-danger");
-          yourBadge.classList.add("badge-danger");
-        }
-      }
-    })
-
-    // Fake other people answering results: (this is all nonsense, ignore this code, these would
-    // be triggered by the backend revealing who was right and wrong).
-    const answeredBadges = document.getElementById("who-answered").childNodes;
-    Array.prototype.forEach.call(answeredBadges, function(badge) {
-      if (badge.id === "you-answered-badge") { return; }
-      if (badge.nodeName !== "SPAN") { return; }
-
-      badge.classList.remove("badge-primary");
-      // flip a coin on them getting the answer right
-      if (Math.floor(Math.random() * 2) == 0) {
-        badge.classList.add("badge-success");
-      } else {
-        badge.classList.add("badge-danger");
-      }
-    });
-  };
-
   // `this` receiver is the answer button selected
   let selectAnswer = function() {
     selectedAnswer = this.innerText;
@@ -124,4 +90,38 @@
     }
   };
   updateTimeLeft();
+
+  let revealAnswer = function() {
+    Array.prototype.forEach.call(answerChoiceBtns, function(btnAnswerChoice) {
+      btnAnswerChoice.classList.remove("list-group-item-warning");
+      const answerText = btnAnswerChoice.innerText;
+      if (selectedAnswer && selectedAnswer === answerText) {
+        const yourBadge = document.getElementById("you-answered-badge");
+        yourBadge.classList.remove("badge-primary");
+        if (selectedAnswer === questionData.correct_answer) {
+          btnAnswerChoice.classList.add("list-group-item-success");
+          yourBadge.classList.add("badge-success");
+        } else {
+          btnAnswerChoice.classList.add("list-group-item-danger");
+          yourBadge.classList.add("badge-danger");
+        }
+      }
+    })
+
+    // Fake other people answering results: (this is all nonsense, ignore this code, these would
+    // be triggered by the backend revealing who was right and wrong).
+    const answeredBadges = document.getElementById("who-answered").childNodes;
+    Array.prototype.forEach.call(answeredBadges, function(badge) {
+      if (badge.id === "you-answered-badge") { return; }
+      if (badge.nodeName !== "SPAN") { return; }
+
+      badge.classList.remove("badge-primary");
+      // flip a coin on them getting the answer right
+      if (Math.floor(Math.random() * 2) == 0) {
+        badge.classList.add("badge-success");
+      } else {
+        badge.classList.add("badge-danger");
+      }
+    });
+  };
 </script>
