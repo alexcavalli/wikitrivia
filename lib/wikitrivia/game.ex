@@ -1,17 +1,37 @@
 defmodule Wikitrivia.Game do
+  # Game behaviors:
+  # * Timer-based:
+  #   * Start question answering period
+  #     * This will add/replace a question to the state
+  #     * This will also clear any previous user answers from the state
+  #   * Stop question answering period
+  #     * Award points based on answer correctness
+  #     * Mark winner(s) if we're done
+  # * User-event based:
+  #   * If during question answering period
+  #     * Mark answer choice for user (does nothing if user already marked a choice)
+  #       * This broadcasts updated state if state changed
+  #   * During lobby
+  #     * Add player
+  #     * Submit user name
+  #     * Start
+
   @question_period_ms 5000
   @post_question_period_ms 5000
+  @default_num_questions 4
 
-  def create_game do
+  # General events
+  def create(num_questions \\ @default_num_questions) do
     game_id = Ecto.UUID.generate
-    {:ok, _} = Agent.start_link(fn -> default_state() end, name: agent_name_by_game_id(game_id))
+    {:ok, _} = Agent.start_link(fn -> default_state(num_questions) end, name: agent_name_by_game_id(game_id))
     game_id
   end
 
-  def get_game_state(game_id) do
+  def get_state(game_id) do
     Agent.get(agent_name_by_game_id(game_id), fn s -> s end)
   end
 
+  # User events
   def add_player(game_id, player_name) do
     Agent.update(agent_name_by_game_id(game_id), add_player(player_name))
   end
@@ -29,16 +49,21 @@ defmodule Wikitrivia.Game do
   # State structure of a Game. Details:
   #   * players - Set of all players in this game.
   #   * scores - Map of all player scores in this game, keyed by player name
-  #   * num_questions_left - Number of questions remaining to answer in this game
-  #   * timer_state - Current state of timed component of this game. :off before entering timed
-  #       periods, otherwise the name of the period (:question, :question_results, :done)
-  #   * timer_data - Data associated with the timer_state (e.g. the question)
-  defp default_state do
+  #   * num_questions - Number of questions total in the game
+  #   * game_phase - Current phase of this game.
+  #     * :lobby - Initial phase, waiting for players to join. Changes on the "start" event.
+  #     * :question - Users are posed a question and can submit answers. On a timer, can move to
+  #                   question_results or to game_results, depending on number of questions left.
+  #     * :question_results - Contains updated scores from previous question phase. Always moves to
+  #                           question phase after a time period.
+  #     * :game_results - Final phase, with final results.
+  #   * timer_data - Data associated with the game_phase (e.g. the question)
+  defp default_state(num_questions) do
     %{
       players: MapSet.new(),
       scores: %{},
-      num_questions_left: 5,
-      timer_state: :off,
+      num_questions: num_questions,
+      game_phase: :lobby,
       timer_data: %{}
     }
   end
@@ -66,7 +91,7 @@ defmodule Wikitrivia.Game do
   end
 
   defp start_question_phase do
-    fn (state) -> %{state | timer_state: :question, timer_data: %{question: "data"}} end
+    fn (state) -> %{state | game_phase: :question, timer_data: %{question: "data"}} end
   end
 
   defp stop_question(game_id, game_timer_callback) do
@@ -80,8 +105,8 @@ defmodule Wikitrivia.Game do
   defp stop_question_phase do
     fn (state = %{num_questions_left: num_questions_left}) ->
       num_questions_left = num_questions_left - 1
-      timer_state = if num_questions_left <= 0, do: :done, else: :question_results
-      %{state | num_questions_left: num_questions_left, timer_state: timer_state, timer_data: %{}}
+      game_phase = if num_questions_left <= 0, do: :done, else: :question_results
+      %{state | num_questions_left: num_questions_left, game_phase: game_phase, timer_data: %{}}
     end
   end
 
@@ -91,7 +116,7 @@ defmodule Wikitrivia.Game do
   end
 
   defp game_finished?(game_id) do
-    get_game_state(game_id).timer_state == :done
+    get_state(game_id).game_phase == :done
   end
 
   defp agent_name_by_game_id(game_id) do
