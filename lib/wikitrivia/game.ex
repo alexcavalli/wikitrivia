@@ -13,12 +13,13 @@ defmodule Wikitrivia.Game do
   #       * This broadcasts updated state if state changed
   #   * During lobby
   #     * Add player
-  #     * Submit user name
+  #     * Update player name
   #     * Start
 
   @question_period_ms 5000
   @post_question_period_ms 5000
   @default_num_questions 4
+  @default_player_name "anonymous"
 
   # General events
   def create(game_name, num_questions \\ @default_num_questions) do
@@ -34,29 +35,38 @@ defmodule Wikitrivia.Game do
   end
 
   # User events
-  def has_player(game_id, player_id) do
-    Agent.get(agent_name_by_game_id(game_id), fn s -> MapSet.member?(s.players, player_id) end)
+  def add_player(game_id, player_id) do
+    Agent.get_and_update(agent_name_by_game_id(game_id), fn state -> _add_player(state, player_id) end)
   end
 
-  def add_player(game_id, player_id) do
-    player_name = "anonymous"
-
-    # TODO: need to handle games that don't exist
-    Agent.update(agent_name_by_game_id(game_id), fn (state = %{players: players, scores: scores, player_names: player_names}) ->
-      players = players |> MapSet.put(player_id)
-      scores = scores |> Map.put(player_id, 0)
-      player_names = player_names |> Map.put(player_id, player_name)
-      %{state | players: players, scores: scores, player_names: player_names}
-    end)
-
-    player_id
+  defp _add_player(state = %{players: players, scores: scores}, player_id) do
+    if Map.has_key?(players, player_id) do
+      {{:no_change, state}, state}
+    else
+      new_state = %{state |
+        players: Map.put(players, player_id, @default_player_name),
+        scores: Map.put(scores, player_id, 0)
+      }
+      {{:ok, new_state}, new_state}
+    end
   end
 
   def update_player_name(game_id, player_id, player_name) do
-    Agent.update(agent_name_by_game_id(game_id), fn (state = %{player_names: player_names}) ->
-      player_names = player_names |> Map.put(player_id, player_name)
-      %{ state | player_names: player_names }
-    end)
+    Agent.get_and_update(agent_name_by_game_id(game_id), fn state -> _update_player_name(state, player_id, player_name) end)
+  end
+
+  defp _update_player_name(state = %{players: players}, player_id, player_name) do
+    cond do
+      !Map.has_key?(players, player_id) ->
+        {{:no_change, state}, state}
+      Map.fetch(players, player_id) == {:ok, player_name} ->
+        {{:no_change, state}, state}
+      true ->
+        new_state = %{state |
+          players: %{players | player_id => player_name}
+        }
+        {{:ok, new_state}, new_state}
+    end
   end
 
   def award_points(game_id, player_name, points) do
@@ -70,9 +80,12 @@ defmodule Wikitrivia.Game do
   end
 
   # State structure of a Game. Details:
-  #   * players - Set of all players in this game.
+  #   * name - Name of this game, provided by user up front.
+  #   * player_names - id -> name map for all players in the game.
   #   * scores - Map of all player scores in this game, keyed by player name
   #   * num_questions - Number of questions total in the game
+  #   * current_question - Current question number, 0-indexed
+  #   * questions - List of game questions
   #   * game_phase - Current phase of this game.
   #     * :lobby - Initial phase, waiting for players to join. Changes on the "start" event.
   #     * :question - Users are posed a question and can submit answers. On a timer, can move to
@@ -80,15 +93,15 @@ defmodule Wikitrivia.Game do
   #     * :question_results - Contains updated scores from previous question phase. Always moves to
   #                           question phase after a time period.
   #     * :game_results - Final phase, with final results.
-  #   * timer_data - Data associated with the game_phase (e.g. the question)
   defp init_state(game_name, num_questions) do
     %{
       name: game_name,
-      player_names: %{}
+      player_names: %{},
       scores: %{},
       num_questions: num_questions,
-      game_phase: :lobby,
-      timer_data: %{}
+      current_question: 0,
+      questions: [],
+      game_phase: :lobby
     }
   end
 
