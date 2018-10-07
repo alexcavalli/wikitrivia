@@ -1,9 +1,9 @@
 function createPlayerNameInput(player_name, oninput) {
-  const element = document.createElement('input');
+  const element = document.createElement('input')
   element.id = "player_name"
   element.type = "text"
   element.value = player_name
-  element.oninput = oninput;
+  element.oninput = oninput
 
   return element
 }
@@ -23,4 +23,14 @@ function createOpponentsList(player_id, state) {
   return ul
 }
 
-export { createPlayerNameInput, createOpponentsList }
+function createStartGameButton(onclick) {
+  const element = document.createElement('button')
+  element.id = 'btn-start'
+  element.onclick = onclick
+
+  element.appendChild(document.createTextNode('Start Game!'))
+
+  return element
+}
+
+export { createPlayerNameInput, createOpponentsList, createStartGameButton }

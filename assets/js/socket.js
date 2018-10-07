@@ -4,7 +4,7 @@
 // To use Phoenix channels, the first step is to import Socket
 // and connect at the socket path in "lib/web/endpoint.ex":
 import {Socket} from "phoenix"
-import {createPlayerNameInput, createOpponentsList} from "./view"
+import {createPlayerNameInput, createOpponentsList, createStartGameButton} from "./view"
 const uuid = require('uuid/v1')
 
 let socket = new Socket("/socket", {params: {token: window.userToken}})
@@ -81,10 +81,6 @@ function setPlayerId(player_id) {
   document.cookie = `player_id=${player_id}`
 }
 
-function changePlayerName(player_name) {
-  channel.push("player_update", { game_id, player_id: getPlayerId(), player_name })
-}
-
 function redraw(state) {
   const player_id = getPlayerId();
   const player_name = state.game_state.player_names[player_id]
@@ -95,7 +91,7 @@ function redraw(state) {
   }
 
   const player_name_input = createPlayerNameInput(player_name, (event) => {
-    changePlayerName(event.target.value)
+    channel.push("player_update", { game_id, player_id: getPlayerId(), player_name: event.target.value })
   })
   const join_game_link = document.createElement('p')
   join_game_link.appendChild(document.createTextNode(`Join Game Link: ${window.location}`))
@@ -103,9 +99,9 @@ function redraw(state) {
   const game_header = document.createElement('h2')
   game_header.appendChild(document.createTextNode(`Joined Game: ${state.game_state.name}`))
 
-  const start_game_button = document.createElement('button')
-  start_game_button.id = 'btn-start'
-  start_game_button.appendChild(document.createTextNode('Start Game!'))
+  const start_game_button = createStartGameButton(() => {
+    channel.push("go", {"game_id": game_id})
+  })
 
   game.appendChild(game_header)
   game.appendChild(join_game_link)
@@ -169,11 +165,5 @@ channel.join()
        .receive("ok", (resp) => { console.log("Joined successfully", resp) })
        .receive("error", (resp) => { console.log("Unable to join", resp) })
 channel.push("player_joined", { game_id, player_id: getPlayerId() })
-
-/*
-btnStart.onclick = function() {
-  channel.push("go", {"game_id": gameId})
-}
-*/
 
 export default socket
