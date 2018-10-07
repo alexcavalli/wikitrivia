@@ -98,8 +98,12 @@ function redraw(state) {
     changePlayerName(event.target.value)
   })
   const join_game_link = document.createElement('p')
-
   join_game_link.appendChild(document.createTextNode(`Join Game Link: ${window.location}`))
+
+  const game_header = document.createElement('h2')
+  game_header.appendChild(document.createTextNode(`Joined Game: ${state.game_state.name}`))
+
+  game.appendChild(game_header)
   game.appendChild(join_game_link)
   game.appendChild(player_name_input)
   game.appendChild(createOpponentsList(player_id, state))
