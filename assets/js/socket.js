@@ -103,10 +103,15 @@ function redraw(state) {
   const game_header = document.createElement('h2')
   game_header.appendChild(document.createTextNode(`Joined Game: ${state.game_state.name}`))
 
+  const start_game_button = document.createElement('button')
+  start_game_button.id = 'btn-start'
+  start_game_button.appendChild(document.createTextNode('Start Game!'))
+
   game.appendChild(game_header)
   game.appendChild(join_game_link)
   game.appendChild(player_name_input)
   game.appendChild(createOpponentsList(player_id, state))
+  game.appendChild(start_game_button)
   player_name_input.focus()
 }
 
