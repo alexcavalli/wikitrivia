@@ -8,14 +8,14 @@ function createPlayerNameInput(player_name, oninput) {
   return element
 }
 
-function createOpponentsList(player_id, state) {
+function createOpponentsList(player_id, player_names) {
   const ul = document.createElement('ul')
 
-  for (let id in state.game_state.player_names) {
+  for (let id in player_names) {
     if (id !== player_id) {
       const li = document.createElement('li')
 
-      li.appendChild(document.createTextNode(state.game_state.player_names[id]))
+      li.appendChild(document.createTextNode(player_names[id]))
       ul.appendChild(li)
     }
   }

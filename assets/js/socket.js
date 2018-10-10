@@ -5,7 +5,6 @@
 // and connect at the socket path in "lib/web/endpoint.ex":
 import {Socket} from "phoenix"
 import {createPlayerNameInput, createOpponentsList, createStartGameButton} from "./view"
-const uuid = require('uuid/v1')
 
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 
@@ -52,7 +51,7 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 //
 // Finally, pass the token on connect as below. Or remove it
 // from connect if you don't care about authentication.
-
+/*
 socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
@@ -165,5 +164,5 @@ channel.join()
        .receive("ok", (resp) => { console.log("Joined successfully", resp) })
        .receive("error", (resp) => { console.log("Unable to join", resp) })
 channel.push("player_joined", { game_id, player_id: getPlayerId() })
-
+*/
 export default socket
