@@ -1,23 +1,4 @@
-// Brunch automatically concatenates all files in your
-// watched paths. Those paths can be configured at
-// config.paths.watched in "brunch-config.js".
-//
-// However, those files will only be executed if
-// explicitly imported. The only exception are files
-// in vendor, which are never wrapped in imports and
-// therefore are always executed.
-
-// Import dependencies
-//
-// If you no longer want to use a dependency, remember
-// to also remove its path from "config.paths.watched".
 import "phoenix_html"
-
-// Import local files
-//
-// Local files can be imported directly using relative
-// paths "./socket" or full ones "web/static/js/socket".
-
 import socket from "./socket"
 import { createPlayerNameInput, createOpponentsList, createStartGameButton } from "./view"
 const uuid = require('uuid/v1')
@@ -38,61 +19,75 @@ const setPlayerId = (player_id) => {
     document.cookie = `player_id=${player_id}`
 }
 
-const redraw = (state, view_state) => {
-    const player_id = getPlayerId()
-    const player_name = state.player_names[player_id]
-    const game = document.getElementById("game")
+const redrawer = (channel) => (state, mapState) => {
+  const player_id = state.current.view.player_id
+  const player_name = state.current.game.player_names[player_id]
+  const game = document.getElementById("game")
 
-    while (game.hasChildNodes()) {
-        game.removeChild(game.lastChild)
-    }
+  while (game.hasChildNodes()) {
+    game.removeChild(game.lastChild)
+  }
 
-    const player_name_input = createPlayerNameInput(player_name, (event) => {
-        channel.push("player_update", { game_id, player_id: getPlayerId(), player_name: event.target.value })
-    })
-    const join_game_link = document.createElement('p')
-    join_game_link.appendChild(document.createTextNode(`Join Game Link: ${window.location}`))
+  const player_name_input = createPlayerNameInput(player_name, (event) => {
+    channel.push("player_update", { game_id, player_id, player_name: event.target.value })
+  })
+  const join_game_link = document.createElement('p')
+  join_game_link.appendChild(document.createTextNode(`Join Game Link: ${window.location}`))
 
-    const game_header = document.createElement('h2')
-    game_header.appendChild(document.createTextNode(`Joined Game: ${state.name}`))
+  const game_header = document.createElement('h2')
+  game_header.appendChild(document.createTextNode(`Joined Game: ${state.current.game.name}`))
 
-    const start_game_button = createStartGameButton(() => {
-        channel.push("go", { "game_id": game_id })
-    })
+  const start_game_button = createStartGameButton(() => {
+    channel.push("go", { "game_id": game_id })
+  })
 
-    game.appendChild(game_header)
-    game.appendChild(join_game_link)
-    game.appendChild(player_name_input)
-    game.appendChild(createOpponentsList(player_id, state.player_names))
-    game.appendChild(start_game_button)
-    player_name_input.focus()
+  game.appendChild(game_header)
+  game.appendChild(join_game_link)
+  game.appendChild(player_name_input)
+  game.appendChild(createOpponentsList(player_id, state.current.game.player_names))
+  game.appendChild(start_game_button)
+  player_name_input.focus()
 }
 
-// Begin garbage code
-let timeLeft = 0
-let updateTimer = function () {
+const initializer = (channel) => (mapState) => {
+  // Begin garbage code
+  let timeLeft = 0
+  let updateTimer = function () {
     document.getElementById("timer").innerText = timeLeft
     timeLeft -= 1
-}
-let timerInterval
-// End garbage code
+  }
+  let timerInterval
+  // End garbage code
 
-socket.connect()
+  const player_id = getPlayerId()
+  //const btnStart = document.getElementById("btn-start")
 
-const game_id = document.getElementById("game_id").value
-const channel = socket.channel(`game:${game_id}`, {})
-//const btnStart = document.getElementById("btn-start")
+  // channels
+  channel.on("player_update", (game) => {
+    mapState((state) => ({
+      current: {
+        game,
+        view: state.current.view,
+      },
+      previous: state.previous
+    }))
+  })
 
-// channels
-channel.on("player_update", (state) => {
-    redraw(state)
-})
+  channel.on("player_joined", (game) => {
+    mapState(() => ({
+      current: {
+        game,
+        view: { player_id }
+      },
+      previous: {
+        game,
+        view: { player_id }
+      }
+    }))
+  })
 
-channel.on("player_joined", (state) => {
-    redraw(state)
-})
-
-channel.on("start_question", (payload) => {
+  /*
+  channel.on("start_question", (payload) => {
     console.log("starting question")
     console.log(payload)
 
@@ -102,9 +97,9 @@ channel.on("start_question", (payload) => {
     updateTimer()
     timerInterval = setInterval(updateTimer, 1000)
     // End garbage code
-})
+  })
 
-channel.on("stop_question", (payload) => {
+  channel.on("stop_question", (payload) => {
     console.log("stopping question")
     console.log(payload)
 
@@ -114,19 +109,38 @@ channel.on("stop_question", (payload) => {
     updateTimer()
     timerInterval = setInterval(updateTimer, 1000)
     // End garbage code
-})
+  })
 
-channel.on("stop_game", (payload) => {
+  channel.on("stop_game", (payload) => {
     console.log("game is done")
     console.log(payload)
 
     // Begin garbage code
     clearInterval(timerInterval)
     // End garbage code
-})
+  })
+  */
 
-channel.join()
+  channel.join()
     .receive("ok", (resp) => { console.log("Joined successfully", resp) })
     .receive("error", (resp) => { console.log("Unable to join", resp) })
 
-channel.push("player_joined", { game_id, player_id: getPlayerId() })
+  channel.push("player_joined", { game_id, player_id })
+}
+
+const runWithState = (fn, onStateChange) => {
+  let state = null
+  const mapState = (mapFn) => {
+    state = JSON.parse(JSON.stringify(mapFn(state)))
+    onStateChange(state, mapState)
+  }
+
+  fn(mapState)
+}
+
+socket.connect()
+
+const game_id = document.getElementById("game_id").value
+const channel = socket.channel(`game:${game_id}`, {})
+
+runWithState(initializer(channel), redrawer(channel))

@@ -1,7 +1,7 @@
 function createPlayerNameInput(player_name, oninput) {
   const element = document.createElement('input')
-  element.id = "player_name"
-  element.type = "text"
+  element.id = 'player_name'
+  element.type = 'text'
   element.value = player_name
   element.oninput = oninput
 
