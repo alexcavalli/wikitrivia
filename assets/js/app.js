@@ -1,6 +1,7 @@
 import "phoenix_html"
 import socket from "./socket"
 import { createPlayerNameInput, createOpponentsList, createStartGameButton } from "./view"
+import { runWithState } from "./util"
 const uuid = require('uuid/v1')
 
 const getPlayerId = () => {
@@ -60,10 +61,10 @@ const initializer = (channel) => (mapState) => {
   // End garbage code
 
   const player_id = getPlayerId()
-  //const btnStart = document.getElementById("btn-start")
 
   // channels
   channel.on("player_update", (game) => {
+    console.log(game)
     mapState((state) => ({
       current: {
         game,
@@ -126,16 +127,6 @@ const initializer = (channel) => (mapState) => {
     .receive("error", (resp) => { console.log("Unable to join", resp) })
 
   channel.push("player_joined", { game_id, player_id })
-}
-
-const runWithState = (fn, onStateChange) => {
-  let state = null
-  const mapState = (mapFn) => {
-    state = JSON.parse(JSON.stringify(mapFn(state)))
-    onStateChange(state, mapState)
-  }
-
-  fn(mapState)
 }
 
 socket.connect()
