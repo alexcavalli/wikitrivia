@@ -18,8 +18,7 @@ defmodule Wikitrivia.Game do
   #     * Update player name
   #     * Start
 
-  @question_period_ms 5000
-  @post_question_period_ms 5000
+  @phase_ms 10000
   @default_num_questions 4
   @default_player_name "anonymous"
 
@@ -35,7 +34,7 @@ defmodule Wikitrivia.Game do
 
   # State structure of a Game. Details:
   #   * name - Name of this game, provided by user up front.
-  #   * player_names - id -> name map for all players in the game.
+  #   * players - id -> name map for all players in the game.
   #   * player_answers - maps of player ids to player answer data, by question index, e.g.
   # [
   #   %{player_id => %{answer:, time_left:}, other_player_id => %{answer:, time_left: }}, # for question index 0
@@ -51,19 +50,19 @@ defmodule Wikitrivia.Game do
   #     * :question_results - Contains updated scores from previous question phase. Always moves to
   #                           question phase after a time period.
   #     * :game_results - Final phase, with final results.
-  defp init_state(game_name, num_questions) do
+  #   * phase_start_time - UTC server clock time for current phase start (nil unless in `question` phase)
+  defp init_state(game_name, _num_questions) do
     state = %{
       name: game_name,
-      player_names: %{},
+      players: %{},
       player_answers: [],
       scores: %{},
       current_question: -1,
       questions: [],
-      game_phase: :lobby
-      # phase_start_time: probably need this for doing point calcs
+      game_phase: :lobby,
+      phase_start_time: nil
     }
-    # dynamic stuff:
-    # add questions from db:
+    # add questions from db (TODO: actually get random questions):
     state = %{state | questions: [Wikitrivia.Repo.get(Wikitrivia.Question, 1), Wikitrivia.Repo.get(Wikitrivia.Question, 2), Wikitrivia.Repo.get(Wikitrivia.Question, 3), Wikitrivia.Repo.get(Wikitrivia.Question, 4)]}
     # set up empty player answers maps:
     state = %{state | player_answers: [%{}, %{}, %{}, %{}]}
@@ -83,7 +82,7 @@ defmodule Wikitrivia.Game do
   end
 
   def answer_question(game_id, player_id, answer) do
-    # TODO
+    GenServer.call(name_by_game_id(game_id), {:answer_question, player_id, answer, Time.utc_now()})
   end
 
   # TODO: We'll probably want to alter the behavior here s.t. the final player answering the
@@ -135,6 +134,24 @@ defmodule Wikitrivia.Game do
     end
   end
 
+  def handle_call({:answer_question, player_id, answer, answer_time}, _from, state = %{game_phase: :question}) do
+    %{player_answers: player_answers, phase_start_time: phase_start_time, current_question: current_question} = state
+    question_answers = Enum.at(player_answers, current_question)
+    cond do
+      Map.has_key?(question_answers, player_id) ->
+        {:reply, {:no_change, state}, state}
+      true ->
+        player_answer = %{answer: answer, time_left: Time.diff(answer_time, phase_start_time)}
+        new_answers = Map.put(question_answers, player_id, player_answer)
+        new_state = %{state |
+          player_answers: List.replace_at(player_answers, current_question, new_answers)
+        }
+        {:reply, {:ok, new_state}, new_state}
+    end
+  end
+
+  def handle_call({:answer_question, _, _, _}, _, state), do: {:reply, {:no_change, state}, state}
+
   def handle_cast({:start_game, game_timer_callback}, state) do
     send(self(), {:change_game_phase, game_timer_callback})
     {:noreply, state}
@@ -150,7 +167,7 @@ defmodule Wikitrivia.Game do
   end
 
   defp set_next_state_timer(game_timer_callback) do
-    Process.send_after(self(), {:change_game_phase, game_timer_callback}, @question_period_ms)
+    Process.send_after(self(), {:change_game_phase, game_timer_callback}, @phase_ms)
   end
 
   defp go_to_next_state(state) do
@@ -167,7 +184,8 @@ defmodule Wikitrivia.Game do
   defp start_question(state = %{current_question: current_question}) do
     %{state |
       game_phase: :question,
-      current_question: current_question + 1
+      current_question: current_question + 1,
+      phase_start_time: Time.utc_now()
     }
   end
 
@@ -176,13 +194,15 @@ defmodule Wikitrivia.Game do
   defp stop_question(state = %{}) do
     state |>
       award_current_question_points |>
-      Map.put(:game_phase, :question_results)
+      Map.put(:game_phase, :question_results) |>
+      Map.put(:phase_start_time, nil)
   end
 
   defp stop_game(state) do
     state |>
       award_current_question_points |>
-      Map.put(:game_phase, :game_results)
+      Map.put(:game_phase, :game_results) |>
+      Map.put(:phase_start_time, nil)
   end
 
   defp award_current_question_points(state = %{current_question: current_question, questions: questions, player_answers: player_answers, scores: scores}) do

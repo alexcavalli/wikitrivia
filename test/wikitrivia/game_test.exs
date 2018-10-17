@@ -12,19 +12,6 @@ defmodule Wikitrivia.GameTest do
     game_id
   end
 
-  test "creates a game with default state" do
-    game_id = Game.create("game_name", 20)
-    initial_state = Game.get_state(game_id)
-    assert initial_state == %{
-      name: "game_name",
-      player_names: %{},
-      scores: %{},
-      current_question: 0,
-      questions: [],
-      game_phase: :lobby
-    }
-  end
-
   describe "add_player" do
     test "adds new players with the name 'anonymous' when the id is missing" do
       game_id = game_with_state(%{players: %{}, scores: %{}})
@@ -84,21 +71,6 @@ defmodule Wikitrivia.GameTest do
 
       assert status == :no_change
       assert players == %{}
-    end
-  end
-
-  describe "start" do
-    test "starts the first question phase" do
-      callback_function = fn (state) -> send self(), {:state, state} end
-
-      next_phase_function = fn (_state, _game_id, callback) -> send self(), {:callback, callback} end
-
-      game_id = game_with_state(%{game_phase: :lobby, current_question: -1})
-
-      Game.start(game_id, callback_function, next_phase_function)
-
-      assert_received {:state, %{game_phase: :question, current_question: 0}}
-      assert_received {:callback, callback_function}
     end
   end
 end
