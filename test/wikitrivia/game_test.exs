@@ -7,19 +7,18 @@ defmodule Wikitrivia.GameTest do
   # from the Game code, not sure that's great. Alas.
   def game_with_state(state) do
     game_id = Ecto.UUID.generate
-    agent_name = {:via, Registry, {Registry.Games, game_id}}
-    {:ok, _} = Agent.start_link(fn -> state end, name: agent_name)
+    name = {:via, Registry, {Registry.Games, game_id}}
+    {:ok, _} = GenServer.start_link(Wikitrivia.Game, state, name: name)
     game_id
   end
 
-  test "starts a game with default state" do
+  test "creates a game with default state" do
     game_id = Game.create("game_name", 20)
     initial_state = Game.get_state(game_id)
     assert initial_state == %{
       name: "game_name",
       player_names: %{},
       scores: %{},
-      num_questions: 20,
       current_question: 0,
       questions: [],
       game_phase: :lobby
@@ -85,6 +84,21 @@ defmodule Wikitrivia.GameTest do
 
       assert status == :no_change
       assert players == %{}
+    end
+  end
+
+  describe "start" do
+    test "starts the first question phase" do
+      callback_function = fn (state) -> send self(), {:state, state} end
+
+      next_phase_function = fn (_state, _game_id, callback) -> send self(), {:callback, callback} end
+
+      game_id = game_with_state(%{game_phase: :lobby, current_question: -1})
+
+      Game.start(game_id, callback_function, next_phase_function)
+
+      assert_received {:state, %{game_phase: :question, current_question: 0}}
+      assert_received {:callback, callback_function}
     end
   end
 end
