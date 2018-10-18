@@ -70,7 +70,10 @@ const initializer = (channel) => (mapState) => {
         game,
         view: state.current.view,
       },
-      previous: state.previous
+      previous: {
+        game: state.current.game,
+        view: state.previous.view
+      }
     }))
   })
 
