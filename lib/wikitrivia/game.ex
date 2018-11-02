@@ -34,13 +34,16 @@ defmodule Wikitrivia.Game do
 
   # State structure of a Game. Details:
   #   * name - Name of this game, provided by user up front.
-  #   * players - id -> name map for all players in the game.
-  #   * player_answers - maps of player ids to player answer data, by question index, e.g.
-  # [
-  #   %{player_id => %{answer:, time_left:}, other_player_id => %{answer:, time_left: }}, # for question index 0
-  #   %{player_id => %{answer:, time_left:}, other_player_id => %{answer:, time_left: }}, # for question index 1
-  # ]
-  #   * scores - Map of all player scores in this game, keyed by player id
+  #   * players - id -> player data:
+  # %{
+  #   id: 1,
+  #   name: "Name",
+  #   score: 15,
+  #   answers: [
+  #     %{answer: "Question 1 answer", time_left: 3},
+  #     %{answer: "Question 2 answer", time_left: 6}
+  #   ]
+  # }
   #   * current_question - Current question number, 0-indexed
   #   * questions - List of game questions
   #   * game_phase - Current phase of this game.
@@ -55,8 +58,6 @@ defmodule Wikitrivia.Game do
     state = %{
       name: game_name,
       players: %{},
-      player_answers: [],
-      scores: %{},
       current_question: -1,
       questions: [],
       game_phase: :lobby,
@@ -64,8 +65,6 @@ defmodule Wikitrivia.Game do
     }
     # add questions from db (TODO: actually get random questions):
     state = %{state | questions: [Wikitrivia.Repo.get(Wikitrivia.Question, 1), Wikitrivia.Repo.get(Wikitrivia.Question, 2), Wikitrivia.Repo.get(Wikitrivia.Question, 3), Wikitrivia.Repo.get(Wikitrivia.Question, 4)]}
-    # set up empty player answers maps:
-    state = %{state | player_answers: [%{}, %{}, %{}, %{}]}
     state
   end
 
@@ -108,14 +107,16 @@ defmodule Wikitrivia.Game do
 
   def handle_call(:get_state, _from, state), do: {:reply, state, state}
 
-  def handle_call({:add_player, player_id}, _from, state = %{players: players, scores: scores}) do
+  def handle_call({:add_player, player_id}, _from, state = %{questions: questions, players: players}) do
     if Map.has_key?(players, player_id) do
       {:reply, {:no_change, state}, state}
     else
-      new_state = %{state |
-        players: Map.put(players, player_id, @default_player_name),
-        scores: Map.put(scores, player_id, 0)
+      default_player = %{
+        name: @default_player_name,
+        score: 0,
+        answers: (for _ <- 1..length(questions), do: %{})
       }
+      new_state = %{state | players: Map.put(players, player_id, default_player)}
       {:reply, {:ok, new_state}, new_state}
     end
   end
@@ -124,27 +125,31 @@ defmodule Wikitrivia.Game do
     cond do
       !Map.has_key?(players, player_id) ->
         {:reply, {:no_change, state}, state}
-      Map.fetch(players, player_id) == {:ok, player_name} ->
+      players[player_id][:name] == player_name ->
         {:reply, {:no_change, state}, state}
       true ->
-        new_state = %{state |
-          players: %{players | player_id => player_name}
-        }
+        current_player_state = Map.get(players, player_id)
+        new_player_state = %{current_player_state | name: player_name}
+        new_state = %{state | players: %{players | player_id => new_player_state}}
         {:reply, {:ok, new_state}, new_state}
     end
   end
 
   def handle_call({:answer_question, player_id, answer, answer_time}, _from, state = %{game_phase: :question}) do
-    %{player_answers: player_answers, phase_start_time: phase_start_time, current_question: current_question} = state
-    question_answers = Enum.at(player_answers, current_question)
+    %{players: players = %{^player_id => this_player = %{answers: player_answers}}, phase_start_time: phase_start_time, current_question: current_question} = state
+
+    question_answer = Enum.at(player_answers, current_question)
     cond do
-      Map.has_key?(question_answers, player_id) ->
+      map_size(question_answer) > 0 ->
         {:reply, {:no_change, state}, state}
       true ->
-        player_answer = %{answer: answer, time_left: Time.diff(answer_time, phase_start_time)}
-        new_answers = Map.put(question_answers, player_id, player_answer)
+        player_answer = %{answer: answer, time_left: trunc(@phase_ms / 1000) - Time.diff(answer_time, phase_start_time)}
         new_state = %{state |
-          player_answers: List.replace_at(player_answers, current_question, new_answers)
+          players: %{players |
+            player_id => %{this_player |
+              answers: List.replace_at(player_answers, current_question, player_answer)
+            }
+          }
         }
         {:reply, {:ok, new_state}, new_state}
     end
@@ -205,21 +210,24 @@ defmodule Wikitrivia.Game do
       Map.put(:phase_start_time, nil)
   end
 
-  defp award_current_question_points(state = %{current_question: current_question, questions: questions, player_answers: player_answers, scores: scores}) do
+  defp award_current_question_points(state = %{current_question: current_question, questions: questions, players: players}) do
     correct_answer = Enum.at(questions, current_question).correct_answer
-    question_answers = Enum.at(player_answers, current_question)
 
     # I imagine this could be clarified with a for comprehension or something
-    new_scores = question_answers |>
-      Enum.filter(&match?({_player_id, %{answer: ^correct_answer}}, &1)) |>
-      Enum.map(fn ({player_id, %{time_left: time_left}}) -> {player_id, time_left * 10} end) |> # the "10" is sneaky hidden hardcoded points-per-second-left right here
-      Enum.reduce(scores, fn ({player_id, add_points}, new_scores) ->
-        %{^player_id => player_points} = new_scores
-        %{scores | player_id => player_points + add_points}
+    new_players = players |>
+      Enum.map(fn ({player_id, %{score: score, answers: answers}}) -> {player_id, score, Enum.at(answers, current_question)} end) |>
+      Enum.map(fn ({player_id, score, answer_info}) ->
+        case answer_info do
+          %{answer: ^correct_answer, time_left: time_left} -> {player_id, score + time_left * 10}
+          _ -> {player_id, score}
+        end
+      end) |>
+      Enum.reduce(players, fn({player_id, new_score}, new_players) ->
+        put_in(new_players[player_id][:score], new_score)
       end)
 
     %{state |
-      scores: new_scores
+      players: new_players
     }
   end
 

@@ -14,28 +14,26 @@ defmodule Wikitrivia.GameTest do
 
   describe "add_player" do
     test "adds new players with the name 'anonymous' when the id is missing" do
-      game_id = game_with_state(%{players: %{}, scores: %{}})
+      game_id = game_with_state(%{players: %{}, questions: [%{}, %{}, %{}, %{}]})
       player_id = "1a2b3c"
 
-      {status, %{players: players, scores: scores}} = Game.add_player(game_id, player_id)
+      {status, %{players: players}} = Game.add_player(game_id, player_id)
 
       assert status == :ok
-      assert players == %{"1a2b3c" => "anonymous"}
-      assert scores == %{"1a2b3c" => 0}
+      assert players == %{"1a2b3c" => %{name: "anonymous", score: 0, answers: [%{}, %{}, %{}, %{}]}}
     end
 
     test "does nothing when the player id is already in the game" do
       player_id = "1a2b3c"
       game_id = game_with_state(%{
-        players: %{player_id => "John"},
-        scores: %{player_id => 30}
+        players: %{player_id => %{name: "John", score: 30, answers: [%{}, %{}, %{}, %{}]}},
+        questions: [%{}, %{}, %{}, %{}]
       })
 
-      {status, %{players: players, scores: scores}} = Game.add_player(game_id, player_id)
+      {status, %{players: players}} = Game.add_player(game_id, player_id)
 
       assert status == :no_change
-      assert players == %{"1a2b3c" => "John"}
-      assert scores == %{"1a2b3c" => 30}
+      assert players == %{"1a2b3c" => %{name: "John", score: 30, answers: [%{}, %{}, %{}, %{}]}}
     end
   end
 
@@ -43,24 +41,24 @@ defmodule Wikitrivia.GameTest do
     test "updates the player name to the provided name" do
       player_id = "1a2b3c"
       game_id = game_with_state(%{
-        players: %{player_id => "John"}
+        players: %{player_id => %{name: "John"}}
       })
 
       {status, %{players: players}} = Game.update_player_name(game_id, player_id, "Cool John")
 
       assert status == :ok
-      assert players == %{"1a2b3c" => "Cool John"}
+      assert players == %{"1a2b3c" => %{name: "Cool John"}}
     end
 
     test "returns a no_change response if the player name did not change" do
       player_id = "1a2b3c"
       game_id = game_with_state(%{
-        players: %{player_id => "John"}
+        players: %{player_id => %{name: "John"}}
       })
 
       {status, %{players: players}} = Game.update_player_name(game_id, player_id, "John")
 
-      assert players == %{"1a2b3c" => "John"}
+      assert players == %{"1a2b3c" => %{name: "John"}}
       assert status == :no_change
     end
 
@@ -71,6 +69,66 @@ defmodule Wikitrivia.GameTest do
 
       assert status == :no_change
       assert players == %{}
+    end
+  end
+
+  describe "answer_question" do
+    test "answers the current question for the player if unanswered" do
+      player_id = "1a2b3c"
+      game_id = game_with_state(%{
+        players: %{
+          player_id => %{
+            answers: [%{}]
+          }
+        },
+        phase_start_time: Time.utc_now(),
+        game_phase: :question,
+        current_question: 0
+      })
+
+      {status, %{players: %{^player_id => %{answers: answers}}}} = Game.answer_question(game_id, player_id, "answer")
+
+      assert status == :ok
+      answer = Enum.at(answers, 0)
+      assert answer[:answer] == "answer"
+      assert answer[:time_left] >= 0
+    end
+
+    test "returns a no_change response if the player has already answered this question" do
+      player_id = "1a2b3c"
+      game_id = game_with_state(%{
+        players: %{
+          player_id => %{
+            answers: [%{answer: "something", time_left: 2}]
+          }
+        },
+        phase_start_time: Time.utc_now(),
+        game_phase: :question,
+        current_question: 0
+      })
+
+      {status, %{players: %{^player_id => %{answers: answers}}}} = Game.answer_question(game_id, player_id, "answer")
+
+      assert status == :no_change
+      assert Enum.at(answers, 0) == %{answer: "something", time_left: 2}
+    end
+
+    test "returns a no_change response if the game is not in a question phase" do
+      player_id = "1a2b3c"
+      game_id = game_with_state(%{
+        players: %{
+          player_id => %{
+            answers: [%{}]
+          }
+        },
+        game_phase: :question_results,
+        current_question: 0
+      })
+
+      {status, %{players: %{^player_id => %{answers: answers}}}} = Game.answer_question(game_id, player_id, "answer")
+
+      assert status == :no_change
+      assert Enum.at(answers, 0) == %{}
     end
   end
 end
