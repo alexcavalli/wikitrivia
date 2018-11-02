@@ -3,16 +3,17 @@ defmodule WikitriviaWeb.GameController do
 
   alias Wikitrivia.Game
 
-  def show(conn, %{"id" => game_id}) do
-    render(conn, "show.html", game_id: game_id, player: Ecto.UUID.generate)
+  def show(conn, %{"id" => id}) do
+    render(conn, "show.html", game_id: id)
   end
 
   def new(conn, _params) do
     render(conn, "new.html")
   end
 
-  def create(conn, _params) do
-    game_id = Game.create_game()
+  def create(conn, %{"create_game" => %{"game_name" => game_name}}) do
+    game_id = Game.create_game(game_name)
+
     redirect conn, to: game_path(conn, :show, game_id)
   end
 end

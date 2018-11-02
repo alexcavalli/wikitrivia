@@ -1,6 +1,11 @@
+<div id="game"></div>
+<input id="game_id" type="hidden" value="<%= @game_id %>">
+<!--
 <h2>Joined Game <%= @game_id %></h2>
 <h3 id="timer">Timer here</h3>
 <ul>
-  <li><span id="player"><%= @player %></span> (ME)</li>
+  <li><span id="player"></span> (ME)</li>
 </ul>
 <button id="btn-start">Start</button>
+-->
+<script src='<%= static_path(@conn, "/js/app.js") %>'></script>
