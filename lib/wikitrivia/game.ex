@@ -64,19 +64,9 @@ defmodule Wikitrivia.Game do
       phase_start_time: nil
     }
     # add questions from db (TODO: actually get random questions):
-    questions = generate_questions(num_questions)
-    state = %{state | questions: []}
+    questions = Wikitrivia.QuestionSet.generate(num_questions)
+    state = %{state | questions: questions}
     state
-  end
-
-  defp generate_questions(_num_questions) do
-    [
-      Wikitrivia.Repo.get(Wikitrivia.Question, 1),
-      Wikitrivia.Repo.get(Wikitrivia.Question, 2),
-      Wikitrivia.Repo.get(Wikitrivia.Question, 3),
-      Wikitrivia.Repo.get(Wikitrivia.Question, 4)
-    ] |>
-    Enum.map(fn (question) -> Map.take(question, [:id, :question, :answer_choices, :correct_answer]) end)
   end
 
   def get_state(game_id) do
