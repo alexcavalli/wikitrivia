@@ -12,7 +12,7 @@ defmodule WikitriviaWeb.GameController do
   end
 
   def create(conn, %{"create_game" => %{"game_name" => game_name}}) do
-    game_id = Game.create_game(game_name)
+    game_id = Game.create(game_name)
 
     redirect conn, to: game_path(conn, :show, game_id)
   end

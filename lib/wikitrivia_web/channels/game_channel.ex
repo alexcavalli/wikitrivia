@@ -11,8 +11,7 @@ defmodule WikitriviaWeb.GameChannel do
     if !Game.has_player(game_id, player_id) do
       Game.add_player(game_id, player_id)
     end
-
-    game_state = Game.get_game_state(game_id)
+    game_state = Game.get_state(game_id)
 
     broadcast! socket, "player_joined", game_state
     {:noreply, socket}
@@ -21,7 +20,7 @@ defmodule WikitriviaWeb.GameChannel do
   def handle_in("player_update", %{ "game_id" => game_id, "player_id" => player_id, "player_name" => player_name }, socket) do
     Game.update_player_name(game_id, player_id, player_name)
 
-    game_state = Game.get_game_state(game_id)
+    game_state = Game.get_state(game_id)
 
     broadcast! socket, "player_update", game_state
     {:noreply, socket}
@@ -34,7 +33,7 @@ defmodule WikitriviaWeb.GameChannel do
 
   def game_timer_callback(game_id, socket) do
     fn ->
-      game_state = Game.get_game_state(game_id)
+      game_state = Game.get_state(game_id)
       broadcast! socket, "player_update", game_state
     end
   end
