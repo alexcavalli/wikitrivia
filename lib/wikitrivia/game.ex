@@ -98,7 +98,6 @@ defmodule Wikitrivia.Game do
     GenServer.cast(name_by_game_id(game_id), {:start_game, game_timer_callback})
   end
 
-
   ### Server (callbacks) ###
 
   def init(state) do

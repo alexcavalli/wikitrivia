@@ -1,0 +1,36 @@
+function createPlayerNameInput(player_name, oninput) {
+  const element = document.createElement('input')
+  element.id = 'player_name'
+  element.type = 'text'
+  element.value = player_name
+  element.oninput = oninput
+
+  return element
+}
+
+function createOpponentsList(player_id, player_names) {
+  const ul = document.createElement('ul')
+
+  for (let id in player_names) {
+    if (id !== player_id) {
+      const li = document.createElement('li')
+
+      li.appendChild(document.createTextNode(player_names[id]))
+      ul.appendChild(li)
+    }
+  }
+
+  return ul
+}
+
+function createStartGameButton(onclick) {
+  const element = document.createElement('button')
+  element.id = 'btn-start'
+  element.onclick = onclick
+
+  element.appendChild(document.createTextNode('Start Game!'))
+
+  return element
+}
+
+export { createPlayerNameInput, createOpponentsList, createStartGameButton }
