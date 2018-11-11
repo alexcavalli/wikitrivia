@@ -1,6 +1,6 @@
 import "phoenix_html"
 import socket from "./socket"
-import { createPlayerNameInput, createOpponentsList, createStartGameButton } from "./view"
+import { createPlayerNameInput, createOpponentsList, createStartGameButton, createQuestionPanel } from "./view"
 import { runWithState } from "./util"
 const uuid = require('uuid/v1')
 
@@ -20,14 +20,18 @@ const setPlayerId = (player_id) => {
   document.cookie = `player_id=${player_id}`
 }
 
-const redrawer = (channel) => (state, mapState) => {
+const clearContents = (elementToClear) => {
+  while (elementToClear.hasChildNodes()) {
+    elementToClear.removeChild(elementToClear.lastChild)
+  }
+}
+
+const drawLobby = (channel, state, mapState) => {
   const player_id = getPlayerId()
   const player_name = state && state.current && state.current.game && state.current.game.players && state.current.game.players[player_id] && state.current.game.players[player_id].name
   const game = document.getElementById("game")
 
-  while (game.hasChildNodes()) {
-    game.removeChild(game.lastChild)
-  }
+  clearContents(game)
 
   const player_name_input = createPlayerNameInput(player_name, (event) => {
     channel.push("player_update", { game_id, player_id, player_name: event.target.value })
@@ -39,7 +43,7 @@ const redrawer = (channel) => (state, mapState) => {
   game_header.appendChild(document.createTextNode(`Joined Game: ${state.current.game.name}`))
 
   const start_game_button = createStartGameButton(() => {
-    channel.push("go", { "game_id": game_id })
+    channel.push("start", { "game_id": game_id })
   })
 
   game.appendChild(game_header)
@@ -48,6 +52,46 @@ const redrawer = (channel) => (state, mapState) => {
   game.appendChild(createOpponentsList(player_id, state.current.game.player_names))
   game.appendChild(start_game_button)
   player_name_input.focus()
+}
+
+const drawQuestion = (channel, state, mapState) => {
+  const game = document.getElementById("game")
+
+  clearContents(game)
+
+  game.innerHTML = createQuestionPanel(channel, state, mapState)
+}
+
+const drawQuestionResults = (channel, state, mapState) => {
+  const game = document.getElementById("game")
+
+  clearContents(game)
+
+  game.appendChild(document.createTextNode("Question Results"))
+}
+
+const drawGameResults = (channel, state, mapState) => {
+  const game = document.getElementById("game")
+
+  clearContents(game)
+
+  game.appendChild(document.createTextNode("Game Results"))
+}
+
+const redrawer = (channel) => (state, mapState) => {
+  const gamePhase = state && state.current && state.current.game && state.current.game.game_phase
+  console.log(gamePhase)
+  if (gamePhase === "lobby") {
+    drawLobby(channel, state, mapState)
+  } else if (gamePhase === "question") {
+    drawQuestion(channel, state, mapState)
+  } else if (gamePhase === "question_results") {
+    drawQuestionResults(channel, state, mapState)
+  } else if (gamePhase === "game_results") {
+    drawGameResults(channel, state, mapState)
+  } else {
+    throw `Something went horribly wrong - invalid game phase: '${gamePhase}'.`
+  }
 }
 
 const initializer = (channel) => (mapState) => {
