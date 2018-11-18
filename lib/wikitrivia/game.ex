@@ -54,7 +54,7 @@ defmodule Wikitrivia.Game do
   #                           question phase after a time period.
   #     * :game_results - Final phase, with final results.
   #   * phase_start_time - UTC server clock time for current phase start (nil unless in `question` phase)
-  defp init_state(game_name, _num_questions) do
+  defp init_state(game_name, num_questions) do
     state = %{
       name: game_name,
       players: %{},
@@ -64,7 +64,8 @@ defmodule Wikitrivia.Game do
       phase_start_time: nil
     }
     # add questions from db (TODO: actually get random questions):
-    state = %{state | questions: [Wikitrivia.Repo.get(Wikitrivia.Question, 1), Wikitrivia.Repo.get(Wikitrivia.Question, 2), Wikitrivia.Repo.get(Wikitrivia.Question, 3), Wikitrivia.Repo.get(Wikitrivia.Question, 4)]}
+    questions = Wikitrivia.QuestionSet.generate(num_questions)
+    state = %{state | questions: questions}
     state
   end
 
